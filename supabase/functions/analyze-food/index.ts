@@ -257,15 +257,34 @@ Retorne APENAS um JSON válido no seguinte formato:
       const errorText = await response.text();
       console.error("Erro na API de IA:", response.status, errorText);
       
+      // Tratamento específico para créditos insuficientes
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ 
+            error: "Créditos insuficientes para análise de IA",
+            message: "Você não possui créditos suficientes em sua conta Lovable para usar a análise de alimentos com IA. Por favor, recarregue seus créditos ou aguarde a renovação mensal."
+          }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Tratamento para limite de requisições
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Limite de requisições excedido. Tente novamente em alguns instantes." }),
+          JSON.stringify({ 
+            error: "Limite de requisições excedido",
+            message: "Você atingiu o limite de requisições. Tente novamente em alguns instantes."
+          }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       
+      // Erro genérico para outros casos
       return new Response(
-        JSON.stringify({ error: "Erro ao analisar imagem com IA" }),
+        JSON.stringify({ 
+          error: "Erro ao analisar imagem com IA",
+          message: `Erro ${response.status}: Não foi possível processar a análise da imagem. Tente novamente.`
+        }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

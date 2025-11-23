@@ -79,7 +79,22 @@ export const FoodPhotoAnalyzer = () => {
         body: { imageBase64 }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Verificar se há mensagem específica no erro
+        const errorMessage = data?.message || data?.error || error.message;
+        
+        // Tratamento específico para créditos insuficientes
+        if (errorMessage.includes('Créditos insuficientes') || errorMessage.includes('créditos')) {
+          toast.error("Créditos insuficientes", {
+            description: "Você não possui créditos suficientes para análise de IA. Recarregue seus créditos ou aguarde a renovação mensal."
+          });
+        } else {
+          toast.error("Erro na Análise", {
+            description: errorMessage || "Não foi possível analisar a imagem. Tente novamente."
+          });
+        }
+        return;
+      }
 
       console.log("Resultado da análise:", data);
       
@@ -87,12 +102,20 @@ export const FoodPhotoAnalyzer = () => {
         setAnalysisResult(data);
         toast.success("Alimento identificado com sucesso!");
       } else {
-        throw new Error(data.error || 'Erro na análise');
+        toast.error("Erro na análise", {
+          description: data.message || data.error || "Não foi possível processar a análise."
+        });
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao analisar imagem:', error);
-      toast.error("Erro ao analisar imagem. Tente novamente.");
+      
+      // Verificar se há mensagem específica no erro
+      const errorMessage = error?.message || "Erro ao analisar imagem. Tente novamente.";
+      
+      toast.error("Erro na Análise", {
+        description: errorMessage
+      });
     } finally {
       setIsAnalyzing(false);
     }

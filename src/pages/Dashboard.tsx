@@ -47,23 +47,11 @@ const Dashboard = () => {
       }
 
       if (profile?.name) {
-        let firstName = profile.name.trim();
-        
-        // Se for email, pegar parte antes do @ e remover caracteres especiais
-        if (firstName.includes('@')) {
-          firstName = firstName.split('@')[0].replace(/[.+]/g, ' ');
-        }
-        
-        // Pegar apenas primeiro nome se houver espaços
-        firstName = firstName.split(' ')[0];
-        
-        // Capitalizar primeira letra de cada palavra
-        firstName = firstName
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-          .join(' ');
-        
-        setUserName(firstName);
+        // Pegar apenas o primeiro nome
+        const firstName = profile.name.trim().split(' ')[0];
+        // Capitalizar primeira letra
+        const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+        setUserName(formattedName);
       } else {
         setUserName('Amigo');
       }

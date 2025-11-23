@@ -53,7 +53,6 @@ export function Navbar() {
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             const Icon = item.icon;
-            const isProfileItem = item.name === "Perfil";
             
             return (
               <Link key={item.name} to={item.href}>
@@ -62,8 +61,7 @@ export function Navbar() {
                   size="sm"
                   className={cn(
                     "flex flex-col items-center gap-0.5 h-auto p-1.5 min-w-[50px] md:flex-row md:gap-2 md:px-4 md:p-2 md:min-w-[60px]",
-                    isActive && "text-primary bg-gradient-fitness-subtle",
-                    isProfileItem && "hidden md:flex" // Mostrar apenas no desktop
+                    isActive && "text-primary bg-gradient-fitness-subtle"
                   )}
                 >
                   <Icon className="w-4 h-4 md:w-5 md:h-5" />

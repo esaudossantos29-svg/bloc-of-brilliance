@@ -22,11 +22,21 @@ interface MuscleGroupDetailModalProps {
 
 export function MuscleGroupDetailModal({ group, onClose, exercises }: MuscleGroupDetailModalProps) {
   const [showAllExercises, setShowAllExercises] = useState(false);
+  const [selectedSubdivision, setSelectedSubdivision] = useState<string | null>(null);
   
   if (!group) return null;
 
-  const displayedExercises = showAllExercises ? exercises : exercises.slice(0, 8);
-  const hasMoreExercises = exercises.length > 8;
+  // Filtrar exercícios por subdivisão selecionada
+  const filteredBySubdivision = selectedSubdivision
+    ? exercises.filter(exercise => 
+        exercise.muscle_group?.toLowerCase().includes(selectedSubdivision.toLowerCase()) ||
+        exercise.description?.toLowerCase().includes(selectedSubdivision.toLowerCase()) ||
+        exercise.name?.toLowerCase().includes(selectedSubdivision.toLowerCase())
+      )
+    : exercises;
+
+  const displayedExercises = showAllExercises ? filteredBySubdivision : filteredBySubdivision.slice(0, 8);
+  const hasMoreExercises = filteredBySubdivision.length > 8;
 
   return (
     <Dialog open={!!group} onOpenChange={onClose}>
@@ -55,19 +65,39 @@ export function MuscleGroupDetailModal({ group, onClose, exercises }: MuscleGrou
                   <Target className="w-5 h-5" />
                   Subdivisões do Músculo
                 </CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Clique em uma subdivisão para filtrar exercícios específicos
+                </p>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
+                  <Badge 
+                    variant={selectedSubdivision === null ? "default" : "outline"}
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => {
+                      setSelectedSubdivision(null);
+                      setShowAllExercises(false);
+                    }}
+                  >
+                    Todos
+                  </Badge>
                   {group.subGroups.map((subGroup, index) => (
                     <Badge 
                       key={index} 
-                      variant="secondary"
-                      style={{ 
+                      variant={selectedSubdivision === subGroup ? "default" : "secondary"}
+                      style={selectedSubdivision === subGroup ? { 
+                        backgroundColor: group.color,
+                        color: 'white'
+                      } : { 
                         backgroundColor: `${group.color}20`,
                         color: group.color,
                         borderColor: group.color
                       }}
-                      className="border"
+                      className="border cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => {
+                        setSelectedSubdivision(subGroup === selectedSubdivision ? null : subGroup);
+                        setShowAllExercises(false);
+                      }}
                     >
                       {subGroup}
                     </Badge>
@@ -82,11 +112,16 @@ export function MuscleGroupDetailModal({ group, onClose, exercises }: MuscleGrou
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Dumbbell className="w-5 h-5" />
-                Exercícios ({exercises.length})
+                Exercícios ({filteredBySubdivision.length})
+                {selectedSubdivision && (
+                  <span className="text-sm font-normal text-muted-foreground">
+                    - {selectedSubdivision}
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {exercises.length > 0 ? (
+              {filteredBySubdivision.length > 0 ? (
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {displayedExercises.map((exercise, index) => (
@@ -123,7 +158,7 @@ export function MuscleGroupDetailModal({ group, onClose, exercises }: MuscleGrou
                       ) : (
                         <>
                           <ChevronDown className="w-4 h-4 mr-1" />
-                          + {exercises.length - 8} exercícios adicionais
+                          + {filteredBySubdivision.length - 8} exercícios adicionais
                         </>
                       )}
                     </Button>
@@ -132,8 +167,12 @@ export function MuscleGroupDetailModal({ group, onClose, exercises }: MuscleGrou
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>Nenhum exercício cadastrado ainda</p>
-                  <p className="text-sm mt-1">Use o upload em lote para adicionar exercícios</p>
+                  <p>Nenhum exercício encontrado para esta subdivisão</p>
+                  <p className="text-sm mt-1">
+                    {selectedSubdivision 
+                      ? `Clique em "Todos" para ver todos os exercícios`
+                      : 'Use o upload em lote para adicionar exercícios'}
+                  </p>
                 </div>
               )}
             </CardContent>

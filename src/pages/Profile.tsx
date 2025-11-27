@@ -13,6 +13,7 @@ import { EditableAvatar } from "@/components/EditableAvatar";
 import { supabase } from "@/integrations/supabase/untyped";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { PushNotificationSettings } from "@/components/PushNotificationSettings";
 
 const Profile = () => {
   // === INÍCIO DAS MODIFICAÇÕES ===
@@ -504,6 +505,9 @@ const Profile = () => {
             </div>
           </div>
         </GymCard>
+
+        {/* Push Notifications */}
+        <PushNotificationSettings />
 
         {/* Subscription */}
         <GymCard

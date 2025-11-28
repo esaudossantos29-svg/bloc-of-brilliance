@@ -91,7 +91,32 @@ const ExerciseDetail = () => {
   }
 
   const startExercise = () => {
-    navigate(`/workout-player/${exercise.id}`);
+    // Criar um mini-treino com apenas este exercício
+    const singleExerciseWorkout = {
+      id: `single-${exercise.id}`,
+      name: exercise.name,
+      focus: exercise.muscleGroup,
+      duration: exercise.duration || "15-20 min",
+      exercises: [
+        {
+          id: exercise.id,
+          name: exercise.name,
+          sets: exercise.sets || 3,
+          reps: exercise.reps || "10-12",
+          restTime: exercise.restTime || 60,
+          muscleGroup: exercise.muscleGroup,
+          type: 'principal',
+          equipment: exercise.equipment || [],
+          instructions: exercise.instructions || [],
+          animation: exercise.gif_url || exercise.animation || exercise.name
+        }
+      ]
+    };
+    
+    // Navegar para WorkoutSession passando o treino via state
+    navigate('/workout-session', { 
+      state: { workout: singleExerciseWorkout } 
+    });
   };
 
   return (

@@ -663,49 +663,167 @@ const Nutrition = () => {
                     </div>
 
                     {selectedMeal === meal.id && (
-                      <div className="mt-6 pt-4 border-t border-border/50">
-                        <h4 className="font-semibold mb-4">Alimentos identificados:</h4>
-                        
-                        {meal.foods && Array.isArray(meal.foods) ? (
-                          <ul className="space-y-4 mb-6">
-                            {meal.foods.map((food: any, index: number) => (
-                              <li key={index}>
-                                <div className="flex items-start gap-2">
-                                  <span className="text-orange-500 mt-1 text-base">•</span>
-                                  <div className="flex-1">
-                                    <div className="text-sm">
-                                      <span className="font-normal">
-                                        {food.name} ({food.portionGrams || food.portion}g)
-                                      </span>
-                                      <span className="ml-2">- {food.calories} kcal</span>
-                                      {food.isEstimated && (
-                                        <span className="ml-2 text-muted-foreground">(estimado)</span>
-                                      )}
+                      <div className="mt-6 pt-4 border-t border-border/50 space-y-6">
+                        <div>
+                          <h4 className="font-semibold mb-4 text-base">Análise Detalhada dos Alimentos:</h4>
+                          
+                          {meal.foods && Array.isArray(meal.foods) ? (
+                            <div className="space-y-3 mb-6">
+                              {meal.foods.map((food: any, index: number) => {
+                                const confidenceIcon = food.confidence === 'alta' ? '✓' : 
+                                                       food.confidence === 'média' ? '~' : '?';
+                                const confidenceColor = food.confidence === 'alta' ? 'text-green-500' : 
+                                                        food.confidence === 'média' ? 'text-yellow-500' : 'text-orange-500';
+                                
+                                return (
+                                  <div key={index} className="p-4 bg-muted/30 rounded-lg border border-border/30">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <div className="flex items-center gap-2 flex-1">
+                                        <span className={`${confidenceColor} font-bold text-lg`}>{confidenceIcon}</span>
+                                        <span className="font-semibold text-base">{food.name}</span>
+                                        <span className="text-sm text-muted-foreground">({food.portionGrams}g)</span>
+                                      </div>
+                                      <span className="font-bold text-orange-500 text-lg">{food.calories} kcal</span>
                                     </div>
-                                    {food.description && (
-                                      <p className="mt-2 text-sm text-muted-foreground italic leading-relaxed">
-                                        {food.description}
-                                      </p>
+                                    
+                                    <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+                                      <span className="flex items-center gap-1">
+                                        <span className="font-medium text-foreground">P:</span> {Math.round((food.protein || 0) * 10) / 10}g
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <span className="font-medium text-foreground">C:</span> {Math.round((food.carbs || 0) * 10) / 10}g
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <span className="font-medium text-foreground">G:</span> {Math.round((food.fat || 0) * 10) / 10}g
+                                      </span>
+                                    </div>
+                                    
+                                    {food.source && (
+                                      <div className="mt-2">
+                                        <Badge variant="outline" className="text-[10px]">
+                                          {food.source}
+                                        </Badge>
+                                      </div>
                                     )}
                                   </div>
+                                );
+                              })}
+                              
+                              {/* Total da Refeição */}
+                              <div className="p-4 bg-gradient-to-r from-orange-500/10 to-secondary/10 rounded-lg border-2 border-orange-500/20">
+                                <h4 className="font-semibold mb-3 text-base">Total da Refeição</h4>
+                                <div className="grid grid-cols-4 gap-3 text-center">
+                                  <div>
+                                    <div className="text-2xl font-bold text-orange-500">{Math.round(meal.total_calories || 0)}</div>
+                                    <div className="text-xs text-muted-foreground">kcal</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-lg font-bold">{Math.round((meal.total_protein || 0) * 10) / 10}g</div>
+                                    <div className="text-xs text-muted-foreground">Proteína</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-lg font-bold">{Math.round((meal.total_carbs || 0) * 10) / 10}g</div>
+                                    <div className="text-xs text-muted-foreground">Carbs</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-lg font-bold">{Math.round((meal.total_fat || 0) * 10) / 10}g</div>
+                                    <div className="text-xs text-muted-foreground">Gordura</div>
+                                  </div>
                                 </div>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <ul className="space-y-2 mb-6">
-                            <li className="text-sm flex items-start gap-2">
-                              <span className="text-orange-500 mt-0.5">•</span>
-                              <span>{getMealName()} - {Math.round(meal.calories || 0)} kcal</span>
-                            </li>
-                          </ul>
-                        )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground mb-6">
+                              {getMealName()} - {Math.round(meal.total_calories || 0)} kcal
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Curiosidades Nutricionais */}
+                        {meal.foods && Array.isArray(meal.foods) && (() => {
+                          const facts: string[] = [];
+                          const totals = {
+                            protein: meal.total_protein || 0,
+                            carbs: meal.total_carbs || 0,
+                            fat: meal.total_fat || 0,
+                            calories: meal.total_calories || 0
+                          };
+                          
+                          // Curiosidades baseadas em macros
+                          if (totals.protein > 25) {
+                            facts.push("🏋️ Rica em proteínas - Ideal para recuperação muscular e crescimento!");
+                          } else if (totals.protein > 15) {
+                            facts.push("💪 Boa fonte de proteínas para manutenção muscular.");
+                          }
+                          
+                          if (totals.carbs > 50) {
+                            facts.push("⚡ Alta em carboidratos - Excelente fonte de energia rápida!");
+                          }
+                          
+                          if (totals.fat < 10 && totals.calories > 200) {
+                            facts.push("🥗 Refeição com baixo teor de gordura.");
+                          }
+                          
+                          // Curiosidades por alimento
+                          meal.foods.forEach((food: any) => {
+                            const name = food.name.toLowerCase();
+                            if (name.includes('banana') && facts.length < 3) {
+                              facts.push("🍌 Banana é rica em potássio, ótima para prevenir cãibras!");
+                            }
+                            if (name.includes('aveia') && facts.length < 3) {
+                              facts.push("🥣 Aveia possui fibras solúveis que ajudam a controlar o colesterol.");
+                            }
+                            if (name.includes('ovo') && facts.length < 3) {
+                              facts.push("🥚 Ovos são uma fonte completa de proteína com todos os aminoácidos essenciais.");
+                            }
+                            if ((name.includes('frango') || name.includes('peito')) && facts.length < 3) {
+                              facts.push("🍗 Frango é uma excelente fonte de proteína magra.");
+                            }
+                            if (name.includes('batata doce') && facts.length < 3) {
+                              facts.push("🍠 Batata doce fornece energia de forma gradual e é rica em vitamina A.");
+                            }
+                            if ((name.includes('chocolate') || name.includes('cacau')) && facts.length < 3) {
+                              facts.push("🍫 Chocolate amargo (70%+) contém antioxidantes benéficos para o coração.");
+                            }
+                            if (name.includes('salmão') && facts.length < 3) {
+                              facts.push("🐟 Salmão é rico em ômega-3, essencial para saúde cardiovascular.");
+                            }
+                            if ((name.includes('espinafre') || name.includes('couve')) && facts.length < 3) {
+                              facts.push("🥬 Vegetais verde-escuros são ricos em ferro e vitaminas.");
+                            }
+                          });
+                          
+                          // Contribuição para meta diária
+                          if (nutritionGoals.calories > 0) {
+                            const percentOfDaily = Math.round((totals.calories / nutritionGoals.calories) * 100);
+                            if (percentOfDaily > 0) {
+                              facts.push(`📊 Esta refeição representa ${percentOfDaily}% da sua meta diária de calorias.`);
+                            }
+                          }
+                          
+                          return facts.length > 0 ? (
+                            <div className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg border border-border/30">
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="text-2xl">💡</span>
+                                <h4 className="font-semibold text-base">Curiosidades e Informações Nutricionais</h4>
+                              </div>
+                              <ul className="space-y-2">
+                                {facts.slice(0, 4).map((fact, idx) => (
+                                  <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                                    <span className="text-primary mt-0.5">•</span>
+                                    <span>{fact}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ) : null;
+                        })()}
 
                         {/* Descrição Detalhada */}
                         {meal.notes && (
-                          <div className="mb-6 pb-4 border-b border-border/50">
+                          <div className="p-4 bg-muted/20 rounded-lg border border-border/30">
                             <h4 className="font-semibold mb-2 text-base">Descrição Detalhada:</h4>
-                            <p className="text-sm text-muted-foreground leading-relaxed font-notes italic">
+                            <p className="text-sm text-muted-foreground leading-relaxed italic">
                               {meal.notes}
                             </p>
                           </div>
@@ -715,7 +833,8 @@ const Nutrition = () => {
                           <Button 
                             className="bg-orange-500 hover:bg-orange-600 text-white border-0" 
                             size="sm"
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setEditingMeal(meal);
                               setShowEditDialog(true);
                             }}

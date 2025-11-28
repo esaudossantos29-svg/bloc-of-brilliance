@@ -170,6 +170,7 @@ export type Database = {
           reps: string | null
           rest_time: number | null
           sets: number | null
+          subdivision: string | null
           tips: Json | null
           updated_at: string
         }
@@ -187,6 +188,7 @@ export type Database = {
           reps?: string | null
           rest_time?: number | null
           sets?: number | null
+          subdivision?: string | null
           tips?: Json | null
           updated_at?: string
         }
@@ -204,6 +206,7 @@ export type Database = {
           reps?: string | null
           rest_time?: number | null
           sets?: number | null
+          subdivision?: string | null
           tips?: Json | null
           updated_at?: string
         }

@@ -35,9 +35,7 @@ export function MuscleGroupDetailModal({ group, onClose, exercises }: MuscleGrou
   // Filtrar exercícios por subdivisão selecionada
   const filteredBySubdivision = selectedSubdivision
     ? exercises.filter(exercise => 
-        exercise.muscle_group?.toLowerCase().includes(selectedSubdivision.toLowerCase()) ||
-        exercise.description?.toLowerCase().includes(selectedSubdivision.toLowerCase()) ||
-        exercise.name?.toLowerCase().includes(selectedSubdivision.toLowerCase())
+        exercise.subdivision?.toLowerCase() === selectedSubdivision.toLowerCase()
       )
     : exercises;
 

@@ -23,6 +23,7 @@ interface Exercise {
   duration: string | null;
   instructions: any;
   tips: any;
+  subdivision?: string | null;
 }
 
 interface EditExerciseDialogProps {
@@ -47,6 +48,7 @@ const EditExerciseDialog: React.FC<EditExerciseDialogProps> = ({
     reps: exercise.reps || '10-12',
     rest_time: exercise.rest_time || 60,
     duration: exercise.duration || '',
+    subdivision: exercise.subdivision || '',
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -71,6 +73,20 @@ const EditExerciseDialog: React.FC<EditExerciseDialogProps> = ({
     { value: 'intermediário', label: 'Intermediário' },
     { value: 'avançado', label: 'Avançado' },
   ];
+
+  const subdivisionsByMuscle: Record<string, string[]> = {
+    'triceps': ['Cabeça Longa', 'Cabeça Lateral', 'Cabeça Medial'],
+    'biceps': ['Cabeça Curta', 'Cabeça Longa', 'Braquial'],
+    'peito': ['Superior', 'Médio', 'Inferior'],
+    'costas': ['Dorsal', 'Trapézio', 'Romboides', 'Lombar'],
+    'ombros': ['Anterior', 'Lateral', 'Posterior'],
+    'pernas': ['Quadríceps', 'Posteriores', 'Panturrilhas'],
+    'abdomen': ['Reto Abdominal', 'Oblíquos', 'Transverso'],
+    'gluteos': ['Glúteo Máximo', 'Glúteo Médio', 'Glúteo Mínimo'],
+    'antebracos': ['Flexores', 'Extensores'],
+  };
+
+  const currentSubdivisions = subdivisionsByMuscle[formData.muscle_group.toLowerCase()] || [];
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -128,6 +144,7 @@ const EditExerciseDialog: React.FC<EditExerciseDialogProps> = ({
           reps: formData.reps,
           rest_time: formData.rest_time,
           duration: formData.duration || null,
+          subdivision: formData.subdivision || null,
           gif_url: gifUrl,
           updated_at: new Date().toISOString(),
         })
@@ -218,7 +235,7 @@ const EditExerciseDialog: React.FC<EditExerciseDialogProps> = ({
               <Label>Grupo Muscular *</Label>
               <Select
                 value={formData.muscle_group}
-                onValueChange={(value) => setFormData({ ...formData, muscle_group: value })}
+                onValueChange={(value) => setFormData({ ...formData, muscle_group: value, subdivision: '' })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -252,6 +269,29 @@ const EditExerciseDialog: React.FC<EditExerciseDialogProps> = ({
               </Select>
             </div>
           </div>
+
+          {/* Subdivision */}
+          {currentSubdivisions.length > 0 && (
+            <div className="space-y-2">
+              <Label>Subdivisão Muscular</Label>
+              <Select
+                value={formData.subdivision}
+                onValueChange={(value) => setFormData({ ...formData, subdivision: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a subdivisão" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Nenhuma</SelectItem>
+                  {currentSubdivisions.map((subdivision) => (
+                    <SelectItem key={subdivision} value={subdivision}>
+                      {subdivision}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Description */}
           <div className="space-y-2">

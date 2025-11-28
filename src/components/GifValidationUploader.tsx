@@ -27,6 +27,13 @@ interface GifFile {
     confidence: 'alta' | 'média' | 'baixa';
     description: string;
   };
+  fileNameAnalysis?: {
+    extractedName: string;
+    matchedExerciseId: string | null;
+    matchedExerciseName: string;
+    similarity: number;
+    confidence: 'alta' | 'média' | 'baixa';
+  };
   comparison?: {
     isMatch: boolean;
     similarity: number;
@@ -120,6 +127,149 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
       newFiles.splice(index, 1);
       return newFiles;
     });
+  };
+
+  const analyzeByFileName = async () => {
+    if (files.length === 0) {
+      toast.error('Adicione GIFs primeiro');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setCurrentStep('analyze');
+    setAnalysisProgress(0);
+
+    // Processa TODOS os GIFs instantaneamente
+    const updatedFiles = files.map((gifFile, index) => {
+      // Extrai nome do arquivo sem extensão
+      const nameFromFile = gifFile.originalName
+        .replace(/\.(gif|png|jpg|jpeg|webp)$/i, '')
+        .replace(/_/g, ' ')
+        .replace(/-/g, ' ');
+      
+      // Encontra melhor match no banco de dados
+      const bestMatch = findBestExerciseMatch(
+        nameFromFile,
+        '', // Sem grupo muscular pré-definido
+        exercises
+      );
+      
+      // Determina confiança baseada na similaridade
+      let confidence: 'alta' | 'média' | 'baixa';
+      if (bestMatch.similarity >= 80) confidence = 'alta';
+      else if (bestMatch.similarity >= 50) confidence = 'média';
+      else confidence = 'baixa';
+      
+      setAnalysisProgress(Math.round(((index + 1) / files.length) * 100));
+      
+      return {
+        ...gifFile,
+        fileNameAnalysis: {
+          extractedName: nameFromFile,
+          matchedExerciseId: bestMatch.exerciseId,
+          matchedExerciseName: bestMatch.matchedName,
+          similarity: bestMatch.similarity,
+          confidence
+        },
+        status: 'analyzed' as const,
+        selectedExerciseId: bestMatch.exerciseId || undefined,
+        selectedExerciseName: bestMatch.matchedName || undefined,
+        // Auto-aprovar se confiança alta
+        userApproved: confidence === 'alta'
+      };
+    });
+    
+    setFiles(updatedFiles);
+    setIsAnalyzing(false);
+    setCurrentStep('review');
+    
+    const highConf = updatedFiles.filter(f => f.fileNameAnalysis?.confidence === 'alta').length;
+    const medConf = updatedFiles.filter(f => f.fileNameAnalysis?.confidence === 'média').length;
+    const lowConf = updatedFiles.filter(f => f.fileNameAnalysis?.confidence === 'baixa').length;
+    
+    toast.success(
+      `Análise instantânea concluída! ✅ ${highConf} alta | ⚠️ ${medConf} média | ❌ ${lowConf} baixa confiança`
+    );
+  };
+
+  const analyzeIndividualWithAI = async (index: number) => {
+    const gifFile = files[index];
+    
+    try {
+      setFiles(prev => {
+        const newFiles = [...prev];
+        newFiles[index] = { ...newFiles[index], status: 'analyzing' };
+        return newFiles;
+      });
+
+      // Converte GIF para base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(gifFile.file);
+      });
+
+      const base64 = await base64Promise;
+
+      // Chama edge function
+      const { data, error } = await supabase.functions.invoke('analyze-exercise-gif', {
+        body: {
+          imageBase64: base64,
+          fileName: gifFile.originalName
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.analysis) {
+        const analysis = data.analysis;
+        const comparison = compareExerciseNames(
+          gifFile.originalName,
+          analysis.exerciseName,
+          analysis.confidence
+        );
+
+        const bestMatch = findBestExerciseMatch(
+          analysis.exerciseName,
+          analysis.muscleGroup,
+          exercises
+        );
+
+        setFiles(prev => {
+          const newFiles = [...prev];
+          newFiles[index] = {
+            ...newFiles[index],
+            aiAnalysis: analysis,
+            comparison,
+            selectedExerciseId: bestMatch.exerciseId || undefined,
+            selectedExerciseName: bestMatch.matchedName || undefined,
+            status: 'analyzed',
+            finalName: generateFileName(analysis.exerciseName)
+          };
+          return newFiles;
+        });
+        
+        toast.success('Análise IA concluída!');
+      } else {
+        throw new Error('Análise falhou');
+      }
+    } catch (error) {
+      console.error('Erro ao analisar GIF:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      
+      setFiles(prev => {
+        const newFiles = [...prev];
+        newFiles[index] = {
+          ...newFiles[index],
+          status: 'error',
+          error: errorMessage
+        };
+        return newFiles;
+      });
+      
+      toast.error('Erro na análise IA: ' + errorMessage);
+    }
   };
 
   const analyzeWithAI = async () => {
@@ -368,6 +518,14 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
       case 'analyzing':
         return <Loader2 className="w-5 h-5 animate-spin text-primary" />;
       case 'analyzed':
+        // Verifica se é análise por nome de arquivo ou IA
+        if (file.fileNameAnalysis) {
+          const conf = file.fileNameAnalysis.confidence;
+          if (conf === 'alta') return <CheckCircle2 className="w-5 h-5 text-green-500" />;
+          if (conf === 'média') return <AlertCircle className="w-5 h-5 text-orange-500" />;
+          return <FileWarning className="w-5 h-5 text-red-500" />;
+        }
+        // Análise IA
         return file.comparison?.status === 'correct' 
           ? <CheckCircle2 className="w-5 h-5 text-green-500" />
           : <AlertCircle className="w-5 h-5 text-orange-500" />;
@@ -385,8 +543,9 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
   const stats = {
     total: files.length,
     analyzed: files.filter(f => f.status === 'analyzed').length,
-    correct: files.filter(f => f.comparison?.status === 'correct').length,
-    incorrect: files.filter(f => f.comparison?.status === 'incorrect').length,
+    highConfidence: files.filter(f => f.fileNameAnalysis?.confidence === 'alta' || f.aiAnalysis?.confidence === 'alta').length,
+    mediumConfidence: files.filter(f => f.fileNameAnalysis?.confidence === 'média' || f.aiAnalysis?.confidence === 'média').length,
+    lowConfidence: files.filter(f => f.fileNameAnalysis?.confidence === 'baixa' || f.aiAnalysis?.confidence === 'baixa').length,
     approved: files.filter(f => f.userApproved).length
   };
 
@@ -403,16 +562,16 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
           <div className="text-2xl font-bold text-blue-500">{stats.analyzed}</div>
         </Card>
         <Card className="p-3">
-          <div className="text-xs text-muted-foreground">Corretos</div>
-          <div className="text-2xl font-bold text-green-500">{stats.correct}</div>
+          <div className="text-xs text-muted-foreground">✅ Alta</div>
+          <div className="text-2xl font-bold text-green-500">{stats.highConfidence}</div>
         </Card>
         <Card className="p-3">
-          <div className="text-xs text-muted-foreground">Incorretos</div>
-          <div className="text-2xl font-bold text-orange-500">{stats.incorrect}</div>
+          <div className="text-xs text-muted-foreground">⚠️ Média</div>
+          <div className="text-2xl font-bold text-orange-500">{stats.mediumConfidence}</div>
         </Card>
         <Card className="p-3">
-          <div className="text-xs text-muted-foreground">Aprovados</div>
-          <div className="text-2xl font-bold text-purple-500">{stats.approved}</div>
+          <div className="text-xs text-muted-foreground">❌ Baixa</div>
+          <div className="text-2xl font-bold text-red-500">{stats.lowConfidence}</div>
         </Card>
       </div>
 
@@ -448,18 +607,33 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
 
           {files.length > 0 && (
             <div className="mt-6">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col gap-3">
                 <p className="text-sm text-muted-foreground">
                   {files.length} arquivo(s) selecionado(s)
                 </p>
-                <Button
-                  onClick={analyzeWithAI}
-                  disabled={isAnalyzing || files.length === 0}
-                  className="flex items-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Analisar com IA
-                </Button>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    onClick={analyzeByFileName}
+                    disabled={isAnalyzing || files.length === 0}
+                    className="flex items-center gap-2 flex-1 min-w-[200px]"
+                    variant="default"
+                  >
+                    ⚡ Match por Nome (Rápido)
+                  </Button>
+                  <Button
+                    onClick={analyzeWithAI}
+                    disabled={isAnalyzing || files.length === 0}
+                    className="flex items-center gap-2 flex-1 min-w-[200px]"
+                    variant="outline"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Analisar TODOS com IA (~{Math.ceil(files.length * 2)} min)
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  💡 <strong>Match por Nome</strong>: Instantâneo, usa o nome do arquivo para encontrar exercícios<br />
+                  🤖 <strong>Analisar com IA</strong>: Lento mas preciso, analisa o GIF com visão computacional
+                </p>
               </div>
             </div>
           )}
@@ -531,6 +705,94 @@ export const GifValidationUploader: React.FC<GifValidationUploaderProps> = ({ on
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
+
+                  {/* Análise por Nome de Arquivo */}
+                  {gifFile.fileNameAnalysis && !gifFile.aiAnalysis && (
+                    <div className="mt-3 p-3 bg-muted/30 rounded-md space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            ⚡ Match por nome: {gifFile.fileNameAnalysis.matchedExerciseName || 'Nenhum match encontrado'}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge 
+                              variant={
+                                gifFile.fileNameAnalysis.confidence === 'alta' ? 'default' :
+                                gifFile.fileNameAnalysis.confidence === 'média' ? 'secondary' : 
+                                'outline'
+                              }
+                              className="text-xs"
+                            >
+                              {gifFile.fileNameAnalysis.confidence === 'alta' ? '✅' : 
+                               gifFile.fileNameAnalysis.confidence === 'média' ? '⚠️' : '❌'} 
+                              {' '}{gifFile.fileNameAnalysis.confidence} confiança
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {gifFile.fileNameAnalysis.similarity}% similar
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Nome extraído: "{gifFile.fileNameAnalysis.extractedName}"
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Seleção de exercício */}
+                      {currentStep === 'review' && (
+                        <div className="mt-3 space-y-2">
+                          <Select
+                            value={gifFile.selectedExerciseId || ''}
+                            onValueChange={(value) => updateExerciseSelection(index, value)}
+                          >
+                            <SelectTrigger className="text-sm">
+                              <SelectValue placeholder="Selecione o exercício" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {exercises.map(exercise => (
+                                <SelectItem key={exercise.id} value={exercise.id}>
+                                  {exercise.name} ({exercise.muscle_group})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant={gifFile.userApproved ? 'default' : 'outline'}
+                              onClick={() => approveFile(index, true)}
+                              disabled={!gifFile.selectedExerciseId}
+                              className="flex-1"
+                            >
+                              <Check className="w-4 h-4 mr-1" />
+                              Aprovar
+                            </Button>
+                            {gifFile.fileNameAnalysis.confidence !== 'alta' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => analyzeIndividualWithAI(index)}
+                                disabled={gifFile.status === 'analyzing'}
+                                className="flex-1"
+                              >
+                                {gifFile.status === 'analyzing' ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                    Analisando...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles className="w-3 h-3 mr-1" />
+                                    Analisar com IA
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Análise da IA */}
                   {gifFile.aiAnalysis && (

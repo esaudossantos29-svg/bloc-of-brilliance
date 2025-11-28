@@ -142,24 +142,10 @@ serve(async (req) => {
 
 /**
  * Extracts exercise name from filename
- * Example: "Supino_Reto_Barra.gif" -> "Supino Reto Barra"
+ * Example: "Supino_Reto_Barra.gif" -> "Supino_Reto_Barra"
  */
 function extractExerciseName(filename: string): string {
-  return filename
-    .replace(/\.(gif|png|jpg)$/i, '')  // Remove extension
-    .replace(/_/g, ' ')                 // Replace underscores with spaces
-    .replace(/-/g, ' ')                 // Replace hyphens with spaces
-    .split(' ')
-    .map(word => {
-      // Keep acronyms uppercase
-      if (word === word.toUpperCase() && word.length <= 3) {
-        return word;
-      }
-      // Capitalize first letter, lowercase rest
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-    })
-    .join(' ')
-    .trim();
+  return filename.replace(/\.(gif|png|jpg)$/i, '').trim();
 }
 
 /**

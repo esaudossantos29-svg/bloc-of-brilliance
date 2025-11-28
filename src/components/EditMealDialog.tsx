@@ -29,15 +29,16 @@ export function EditMealDialog({ open, onOpenChange, meal, onMealUpdated }: Edit
   const { toast } = useToast();
 
   useEffect(() => {
-    if (meal?.foods_details && Array.isArray(meal.foods_details)) {
-      setFoods(meal.foods_details.map((food: any) => ({
+    if (meal?.foods && Array.isArray(meal.foods)) {
+      setFoods(meal.foods.map((food: any) => ({
         name: food.name,
         portionGrams: food.portionGrams || 100,
         calories: food.calories || 0,
         protein: food.protein || 0,
         carbs: food.carbs || 0,
         fat: food.fat || 0,
-        confidence: food.confidence
+        confidence: food.confidence,
+        source: food.source
       })));
     }
   }, [meal]);
@@ -48,10 +49,10 @@ export function EditMealDialog({ open, onOpenChange, meal, onMealUpdated }: Edit
     const food = updatedFoods[index];
     
     // Calcular proporção para ajustar nutrientes
-    const originalGrams = meal.foods_details[index].portionGrams || 100;
+    const originalGrams = meal.foods[index].portionGrams || 100;
     const ratio = grams / originalGrams;
     
-    const originalFood = meal.foods_details[index];
+    const originalFood = meal.foods[index];
     updatedFoods[index] = {
       ...food,
       portionGrams: grams,
@@ -81,11 +82,11 @@ export function EditMealDialog({ open, onOpenChange, meal, onMealUpdated }: Edit
       const { error } = await (supabase as any)
         .from('meals')
         .update({
-          foods_details: foods,
-          calories: Math.round(totals.calories),
-          protein: Math.round(totals.protein * 10) / 10,
-          carbs: Math.round(totals.carbs * 10) / 10,
-          fat: Math.round(totals.fat * 10) / 10,
+          foods: foods,
+          total_calories: Math.round(totals.calories),
+          total_protein: Math.round(totals.protein * 10) / 10,
+          total_carbs: Math.round(totals.carbs * 10) / 10,
+          total_fat: Math.round(totals.fat * 10) / 10,
         })
         .eq('id', meal.id);
 

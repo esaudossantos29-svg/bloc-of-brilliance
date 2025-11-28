@@ -401,10 +401,10 @@ const Nutrition = () => {
   // Calcular totais das refeições do dia
   const calculateDailyTotals = () => {
     return savedMeals.reduce((totals, meal) => ({
-      calories: totals.calories + (Number(meal.calories) || 0),
-      protein: totals.protein + (Number(meal.protein) || 0),
-      carbs: totals.carbs + (Number(meal.carbs) || 0),
-      fat: totals.fat + (Number(meal.fat) || 0)
+      calories: totals.calories + (Number(meal.total_calories) || 0),
+      protein: totals.protein + (Number(meal.total_protein) || 0),
+      carbs: totals.carbs + (Number(meal.total_carbs) || 0),
+      fat: totals.fat + (Number(meal.total_fat) || 0)
     }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
   };
 

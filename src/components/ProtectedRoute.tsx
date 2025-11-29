@@ -19,16 +19,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
   }, [user, authLoading, navigate]);
 
-  // Iniciar trial automaticamente se usuário está logado mas não tem trial
-  useEffect(() => {
-    const initTrial = async () => {
-      if (user && !trialLoading && !hasTrialStarted && !isPremium) {
-        await startTrial();
-      }
-    };
-    initTrial();
-  }, [user, trialLoading, hasTrialStarted, isPremium, startTrial]);
-
   // Show loading while checking auth and trial status
   if (authLoading || trialLoading) {
     return (

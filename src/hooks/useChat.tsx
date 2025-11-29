@@ -265,10 +265,12 @@ export const useChat = (initialVoiceProvider: VoiceProvider = 'google-male') => 
 
       // Falar a resposta sempre (removendo emojis)
       console.log('🔊 Preparando para falar resposta com voz:', voiceProvider);
-      // Remove emojis e markdown antes de falar
+      // Remove emojis, markdown e caracteres especiais antes de falar
       const textToSpeak = aiResponse
         .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '')
-        .replace(/\*\*/g, '')
+        .replace(/\*\*|__|\*|_|`|#{1,6}\s?/g, '')
+        .replace(/[#$%&@!?*~^|<>{}[\]\\\/=+]/g, '')
+        .replace(/\s+/g, ' ')
         .trim();
       
       if (textToSpeak) {

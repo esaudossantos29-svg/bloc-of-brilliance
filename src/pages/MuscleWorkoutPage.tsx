@@ -382,7 +382,7 @@ export default function MuscleWorkoutPage() {
 
               {/* Floating Action Button */}
               {selectedExercises.size > 0 && (
-                <div className="fixed bottom-6 right-6 z-50">
+                <div className="fixed bottom-24 right-6 z-50">
                   <Button
                     size="lg"
                     onClick={handleStartWorkout}

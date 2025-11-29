@@ -304,12 +304,13 @@ export const useChat = (initialVoiceProvider: VoiceProvider = 'google-male') => 
       const firstName = profileName.split(' ')[0];
       setAiName(firstName);
 
-      // Definir voz baseada no gênero (suporta português e inglês)
+      // Definir voz do assistente como OPOSTA ao gênero do usuário
+      // Se usuário é homem → assistente feminina / Se usuário é mulher → assistente masculino
       const gender = profile?.gender?.toLowerCase();
       const genderBasedVoice: VoiceProvider = 
-        (gender === 'female' || gender === 'feminino' || gender === 'mulher')
-          ? 'google-female' 
-          : 'google-male';
+        (gender === 'male' || gender === 'masculino' || gender === 'homem')
+          ? 'google-female'  // Homem → assistente feminina
+          : 'google-male';   // Mulher/Outro → assistente masculino
       
       setVoiceProvider(genderBasedVoice);
 

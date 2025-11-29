@@ -48,6 +48,7 @@ const Profile = () => {
     fitness_goal: ''
   });
   const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [isPremium, setIsPremium] = useState<boolean>(false);
   
   const [preferences, setPreferences] = useState<UserPreferences>({
     workoutNotifications: false,
@@ -74,6 +75,7 @@ const Profile = () => {
 
         if (profile) {
           setAvatarUrl(profile.avatar_url || '');
+          setIsPremium(profile.is_premium || false);
           
           // Se o nome salvo for um email, tentar usar o metadata do usuário
           let displayName = profile.name || '';
@@ -316,10 +318,12 @@ const Profile = () => {
           </div>
           <h1 className="text-2xl md:text-3xl font-bold truncate px-2">{userData.name || "—"}</h1>
           <p className="text-sm md:text-base text-muted-foreground">Membro desde Janeiro 2024</p>
-          <Badge className="mt-2 bg-gradient-fitness text-white text-xs md:text-sm">
-            <Crown className="w-3 h-3 mr-1" />
-            Premium
-          </Badge>
+          {isPremium && (
+            <Badge className="mt-2 bg-gradient-fitness text-white text-xs md:text-sm">
+              <Crown className="w-3 h-3 mr-1" />
+              Premium
+            </Badge>
+          )}
         </div>
 
         {/* Profile Stats */}

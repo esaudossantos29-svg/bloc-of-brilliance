@@ -522,61 +522,33 @@ const Profile = () => {
           description="Personalize sua experiência"
         >
           <div className="space-y-6">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <Bell className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium text-xs md:text-base">Notificações de treino</div>
-                  <div className="text-[10px] md:text-sm text-muted-foreground break-words">Lembretes diários para se exercitar</div>
-                </div>
+            <div className="flex items-center gap-3">
+              <Bell className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-xs md:text-base">Notificações de treino</div>
+                <div className="text-[10px] md:text-sm text-muted-foreground break-words">Lembretes diários para se exercitar</div>
               </div>
-              <Switch 
-                checked={preferences.workoutNotifications} 
-                onCheckedChange={() => togglePreference('workoutNotifications')}
-                className="flex-shrink-0" 
-              />
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <Target className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium text-xs md:text-base">Metas automáticas</div>
-                  <div className="text-[10px] md:text-sm text-muted-foreground break-words">Ajuste automático baseado no progresso</div>
-                </div>
+            <div className="flex items-center gap-3">
+              <Target className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-xs md:text-base">Metas automáticas</div>
+                <div className="text-[10px] md:text-sm text-muted-foreground break-words">Ajuste automático baseado no progresso</div>
               </div>
-              <Switch 
-                checked={preferences.autoGoals} 
-                onCheckedChange={() => togglePreference('autoGoals')}
-                className="flex-shrink-0" 
-              />
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <Smartphone className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium text-xs md:text-base">Análise por IA</div>
-                  <div className="text-[10px] md:text-sm text-muted-foreground break-words">Análise automática de refeições por foto</div>
-                </div>
+            <div className="flex items-center gap-3">
+              <Smartphone className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-xs md:text-base">Análise por IA</div>
+                <div className="text-[10px] md:text-sm text-muted-foreground break-words">Análise automática de refeições por foto</div>
               </div>
-              <Switch 
-                checked={preferences.aiAnalysis} 
-                onCheckedChange={() => togglePreference('aiAnalysis')}
-                className="flex-shrink-0" 
-              />
             </div>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <Globe className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium text-xs md:text-base">Compartilhamento de dados</div>
-                  <div className="text-[10px] md:text-sm text-muted-foreground break-words">Me permite compartilhar progresso com a comunidade</div>
-                </div>
+            <div className="flex items-center gap-3">
+              <Globe className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-xs md:text-base">Compartilhamento de dados</div>
+                <div className="text-[10px] md:text-sm text-muted-foreground break-words">Me permite compartilhar progresso com a comunidade</div>
               </div>
-              <Switch 
-                checked={preferences.dataSharing} 
-                onCheckedChange={() => togglePreference('dataSharing')}
-                className="flex-shrink-0" 
-              />
             </div>
           </div>
         </GymCard>

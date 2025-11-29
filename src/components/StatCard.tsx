@@ -5,16 +5,15 @@ interface StatCardProps {
   icon: React.ReactNode;
   title: string;
   value: string;
-  change?: string;
   variant?: "fitness" | "nutrition" | "default";
   className?: string;
 }
 
-export function StatCard({ icon, title, value, change, variant = "default", className }: StatCardProps) {
+export function StatCard({ icon, title, value, variant = "default", className }: StatCardProps) {
   const variantClasses = {
-    fitness: "glass-card border-primary/20 hover:border-primary/40 transition-smooth cursor-pointer hover:scale-105",
-    nutrition: "glass-card border-secondary/20 hover:border-secondary/40 transition-smooth cursor-pointer hover:scale-105",
-    default: "glass-card border-border hover:border-muted-foreground/40 transition-smooth cursor-pointer hover:scale-105"
+    fitness: "glass-card border-primary/20 hover:border-primary/30 transition-smooth",
+    nutrition: "glass-card border-secondary/20 hover:border-secondary/30 transition-smooth",
+    default: "glass-card border-border hover:border-muted-foreground/30 transition-smooth"
   };
 
   const iconClasses = {
@@ -25,29 +24,15 @@ export function StatCard({ icon, title, value, change, variant = "default", clas
 
   return (
     <Card className={cn(variantClasses[variant], className)}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className={cn("p-2 rounded-lg", 
-            variant === "fitness" && "bg-gradient-fitness-subtle",
-            variant === "nutrition" && "bg-gradient-nutrition-subtle",
-            variant === "default" && "bg-muted"
-          )}>
-            <div className={iconClasses[variant]}>
-              {icon}
-            </div>
+      <CardContent className="p-4">
+        <div className="flex items-center gap-3">
+          <div className={iconClasses[variant]}>
+            {icon}
           </div>
-          {change && (
-            <span className={cn(
-              "text-xs font-medium px-2 py-1 rounded-full",
-              change.startsWith('+') ? "text-green-400 bg-green-400/10" : "text-red-400 bg-red-400/10"
-            )}>
-              {change}
-            </span>
-          )}
-        </div>
-        <div className="mt-4">
-          <h3 className="text-2xl font-bold text-foreground">{value}</h3>
-          <p className="text-sm text-muted-foreground">{title}</p>
+          <div>
+            <h3 className="text-xl font-semibold text-foreground">{value}</h3>
+            <p className="text-xs text-muted-foreground">{title}</p>
+          </div>
         </div>
       </CardContent>
     </Card>

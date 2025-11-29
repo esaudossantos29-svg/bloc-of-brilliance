@@ -202,7 +202,6 @@ const Index = () => {
               icon={<Users className="w-6 h-6" />}
               title="Capacidade +50K Usuários Ativos"
               value="50K+"
-              change="+12%"
               variant="fitness"
             />
             <StatCard
@@ -215,7 +214,6 @@ const Index = () => {
               icon={<Apple className="w-6 h-6" />}
               title="Refeições Analisadas"
               value="1M+"
-              change="+25%"
               variant="nutrition"
             />
             <StatCard

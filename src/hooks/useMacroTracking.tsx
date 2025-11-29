@@ -113,8 +113,21 @@ export const useMacroTracking = () => {
   const loadWeeklyData = async () => {
     try {
       const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-      const weekData: WeeklyMacro[] = [];
+      
+      // Buscar todas as meals dos últimos 7 dias de uma vez
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+      
+      const { data: allMeals } = await supabase
+        .from('meals')
+        .select('total_protein, total_carbs, total_fat, created_at')
+        .eq('user_id', user?.id)
+        .gte('created_at', sevenDaysAgo.toISOString());
 
+      // Agrupar meals por dia
+      const weekData: WeeklyMacro[] = [];
+      
       for (let i = 6; i >= 0; i--) {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - i);
@@ -126,21 +139,20 @@ export const useMacroTracking = () => {
         const dateStr = startDate.toISOString().split('T')[0];
         const dayName = days[startDate.getDay()];
 
-        const { data } = await supabase
-          .from('meals')
-          .select('total_protein, total_carbs, total_fat')
-          .eq('user_id', user?.id)
-          .gte('created_at', startDate.toISOString())
-          .lt('created_at', endDate.toISOString());
+        // Filtrar meals do dia atual
+        const dayMeals = allMeals?.filter(meal => {
+          const mealDate = new Date(meal.created_at);
+          return mealDate >= startDate && mealDate < endDate;
+        }) || [];
 
-        const totals = data?.reduce(
+        const totals = dayMeals.reduce(
           (acc, meal) => ({
             protein: acc.protein + (Number(meal.total_protein) || 0),
             carbs: acc.carbs + (Number(meal.total_carbs) || 0),
             fat: acc.fat + (Number(meal.total_fat) || 0),
           }),
           { protein: 0, carbs: 0, fat: 0 }
-        ) || { protein: 0, carbs: 0, fat: 0 };
+        );
 
         weekData.push({
           day: dayName,

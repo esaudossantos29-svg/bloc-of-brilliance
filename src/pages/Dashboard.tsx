@@ -7,185 +7,33 @@ import { Calendar, Clock as ClockIcon, Target, Flame, Droplets, Zap, Plus, Trend
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeSelector } from "@/components/ThemeSelector";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/untyped";
 import { useMotivationalMessage } from "@/hooks/useMotivationalMessage";
 import { WelcomeVoice } from "@/components/WelcomeVoice";
+import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  useOptimizedProfile,
+  useOptimizedTodayNutrition,
+  useOptimizedCaloriesBurned,
+  useOptimizedWeeklyProgress
+} from "@/hooks/useOptimizedQuery";
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [userName, setUserName] = useState<string>('');
-  const [proteinGoal, setProteinGoal] = useState(120);
   const motivationalMessage = useMotivationalMessage();
-  const [nutritionData, setNutritionData] = useState({
-    calories: 0,
-    protein: 0,
-    carbs: 0,
-    fat: 0
-  });
-  const [caloriesBurned, setCaloriesBurned] = useState(0);
-  const [weeklyProgress, setWeeklyProgress] = useState({
-    workoutsCompleted: 0,
-    calorieGoalPercentage: 0,
-    consecutiveDays: 0
-  });
-  
-  useEffect(() => {
-    const loadUserName = async () => {
-      if (!user) return;
+  const { data: profile, isLoading: loadingProfile } = useOptimizedProfile();
+  const { data: nutritionData, isLoading: loadingNutrition } = useOptimizedTodayNutrition();
+  const { data: caloriesBurned = 0, isLoading: loadingCalories } = useOptimizedCaloriesBurned();
+  const { data: weeklyProgress, isLoading: loadingWeekly } = useOptimizedWeeklyProgress();
 
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('user_id', user.id)
-        .maybeSingle();
+  // Nome formatado do usuário
+  const userName = profile?.name 
+    ? profile.name.trim().split(' ')[0].charAt(0).toUpperCase() + profile.name.trim().split(' ')[0].slice(1).toLowerCase()
+    : 'Amigo';
 
-      console.log('Profile data:', profile, 'Error:', error);
-
-      if (profile?.name) {
-        // Pegar apenas o primeiro nome
-        const firstName = profile.name.trim().split(' ')[0];
-        // Capitalizar primeira letra
-        const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
-        setUserName(formattedName);
-      } else {
-        setUserName('Amigo');
-      }
-    };
-
-    loadUserName();
-  }, [user]);
-
-  useEffect(() => {
-    const loadTodayNutrition = async () => {
-      if (!user) return;
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
-      const { data: meals } = await supabase
-        .from('meals')
-        .select('total_calories, total_protein, total_carbs, total_fat')
-        .eq('user_id', user.id)
-        .gte('timestamp', today.toISOString())
-        .lt('timestamp', tomorrow.toISOString());
-
-      if (Array.isArray(meals) && meals.length > 0) {
-        const totals = (meals as any[]).reduce((acc, meal: any) => ({
-          calories: acc.calories + (Number(meal.total_calories) || 0),
-          protein: acc.protein + (Number(meal.total_protein) || 0),
-          carbs: acc.carbs + (Number(meal.total_carbs) || 0),
-          fat: acc.fat + (Number(meal.total_fat) || 0)
-        }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-
-        setNutritionData(totals);
-      } else {
-        setNutritionData({ calories: 0, protein: 0, carbs: 0, fat: 0 });
-      }
-    };
-
-    loadTodayNutrition();
-  }, [user]);
-
-  useEffect(() => {
-    const loadTodayCaloriesBurned = async () => {
-      if (!user) return;
-
-      const today = new Date().toISOString().split('T')[0];
-      const { data: caloriesData } = await supabase
-        .from('calories_burned')
-        .select('calories')
-        .eq('user_id', user.id)
-        .eq('date', today);
-
-      const total = caloriesData?.reduce((sum, record) => sum + record.calories, 0) || 0;
-      setCaloriesBurned(total);
-    };
-
-    loadTodayCaloriesBurned();
-  }, [user]);
-
-  useEffect(() => {
-    const loadWeeklyProgress = async () => {
-      if (!user) return;
-
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      sevenDaysAgo.setHours(0, 0, 0, 0);
-
-      // Carregar treinos completos nos últimos 7 dias
-      const { data: workouts } = await supabase
-        .from('workout_history')
-        .select('id, completed_at')
-        .eq('user_id', user.id)
-        .gte('completed_at', sevenDaysAgo.toISOString());
-
-      const workoutsCompleted = workouts?.length || 0;
-
-      // Carregar dados de nutrição dos últimos 7 dias
-      const { data: weeklyMeals } = await supabase
-        .from('meals')
-        .select('total_calories, timestamp')
-        .eq('user_id', user.id)
-        .gte('timestamp', sevenDaysAgo.toISOString());
-
-      // Calcular meta calórica média
-      let calorieGoalPercentage = 0;
-      if (Array.isArray(weeklyMeals) && weeklyMeals.length > 0) {
-        const dailyCalories: { [key: string]: number } = {};
-        
-        weeklyMeals.forEach((meal: any) => {
-          const date = new Date(meal.timestamp).toISOString().split('T')[0];
-          dailyCalories[date] = (dailyCalories[date] || 0) + (Number(meal.total_calories) || 0);
-        });
-
-        const days = Object.keys(dailyCalories);
-        if (days.length > 0) {
-          const totalPercentage = days.reduce((acc, date) => {
-            return acc + Math.min((dailyCalories[date] / 2200) * 100, 100);
-          }, 0);
-          calorieGoalPercentage = Math.round(totalPercentage / days.length);
-        }
-      }
-
-      // Calcular dias consecutivos (com treinos ou refeições)
-      let consecutiveDays = 0;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      for (let i = 0; i < 30; i++) {
-        const checkDate = new Date(today);
-        checkDate.setDate(checkDate.getDate() - i);
-        const dateStr = checkDate.toISOString().split('T')[0];
-        
-        const hasWorkout = workouts?.some((w: any) => 
-          new Date(w.completed_at).toISOString().split('T')[0] === dateStr
-        );
-        
-        const hasMeal = weeklyMeals?.some((m: any) => 
-          new Date(m.timestamp).toISOString().split('T')[0] === dateStr
-        );
-        
-        if (hasWorkout || hasMeal) {
-          consecutiveDays++;
-        } else {
-          break;
-        }
-      }
-
-      setWeeklyProgress({
-        workoutsCompleted,
-        calorieGoalPercentage,
-        consecutiveDays
-      });
-    };
-
-    loadWeeklyProgress();
-  }, [user]);
-
+  const proteinGoal = profile?.daily_protein_goal || 120;
   const proteinPercentage = proteinGoal > 0 ? Math.round((nutritionData.protein / proteinGoal) * 100) : 0;
+  
+  const isLoading = loadingProfile || loadingNutrition || loadingCalories || loadingWeekly;
   
   const todayStats = [
     { icon: <Flame className="w-6 h-6" />, title: "Calorias Queimadas", value: `${caloriesBurned}`, change: caloriesBurned > 0 ? `${caloriesBurned} kcal` : "0 kcal", variant: "fitness" as const, link: "/stats/calories-burned" },
@@ -199,6 +47,12 @@ const Dashboard = () => {
       <WelcomeVoice />
       <div className="w-full px-4 py-6 space-y-6 max-w-7xl mx-auto">
         {/* Header */}
+        {isLoading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-6 w-96" />
+          </div>
+        ) : (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
           <div className="flex-1">
             <div className="flex items-center justify-between gap-2">
@@ -224,8 +78,16 @@ const Dashboard = () => {
             </Link>
           </div>
         </div>
+        )}
 
         {/* Stats Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-32 w-full" />
+            ))}
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
           {todayStats.map((stat, index) => (
             <Link key={index} to={stat.link}>
@@ -233,6 +95,7 @@ const Dashboard = () => {
             </Link>
           ))}
         </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 w-full">
@@ -344,19 +207,19 @@ const Dashboard = () => {
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center p-4 rounded-lg bg-gradient-fitness-subtle">
               <TrendingUp className="w-8 h-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-primary">{weeklyProgress.workoutsCompleted}</div>
+              <div className="text-2xl font-bold text-primary">{weeklyProgress?.workoutsCompleted || 0}</div>
               <div className="text-sm text-muted-foreground">Treinos Completos</div>
             </div>
             
             <div className="text-center p-4 rounded-lg bg-gradient-nutrition-subtle">
               <Target className="w-8 h-8 text-secondary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-secondary">{weeklyProgress.calorieGoalPercentage}%</div>
+              <div className="text-2xl font-bold text-secondary">{weeklyProgress?.calorieGoalPercentage || 0}%</div>
               <div className="text-sm text-muted-foreground">Meta Calórica</div>
             </div>
             
             <div className="text-center p-4 rounded-lg bg-muted">
               <Calendar className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-              <div className="text-2xl font-bold">{weeklyProgress.consecutiveDays}</div>
+              <div className="text-2xl font-bold">{weeklyProgress?.consecutiveDays || 0}</div>
               <div className="text-sm text-muted-foreground">Dias Consecutivos</div>
             </div>
           </div>

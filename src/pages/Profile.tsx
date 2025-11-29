@@ -27,6 +27,7 @@ const Profile = () => {
     weight: number | null;
     height: number | null;
     fitness_goal: FitnessGoal | '';
+    created_at: string | null;
   }
 
   interface UserPreferences {
@@ -48,7 +49,8 @@ const Profile = () => {
     age: null,
     weight: null,
     height: null,
-    fitness_goal: ''
+    fitness_goal: '',
+    created_at: null
   });
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   
@@ -92,7 +94,8 @@ const Profile = () => {
             age: profile.age ?? null,
             weight: profile.weight ?? null,
             height: profile.height ?? null,
-            fitness_goal: profile.fitness_goal as FitnessGoal ?? ''
+            fitness_goal: profile.fitness_goal as FitnessGoal ?? '',
+            created_at: profile.created_at ?? null
           });
           return;
         }
@@ -117,7 +120,8 @@ const Profile = () => {
             age: parsed.age ?? null,
             weight: parsed.currentWeight ?? parsed.weight ?? null,
             height: parsed.height ?? null,
-            fitness_goal: (parsed.fitnessGoal ?? parsed.fitness_goal) as FitnessGoal ?? ''
+            fitness_goal: (parsed.fitnessGoal ?? parsed.fitness_goal) as FitnessGoal ?? '',
+            created_at: null
           });
           return;
         }
@@ -133,7 +137,8 @@ const Profile = () => {
         age: typeof m.age === 'number' ? m.age : m.age ? Number(m.age) : null,
         weight: typeof m.weight === 'number' ? m.weight : m.weight ? Number(m.weight) : null,
         height: typeof m.height === 'number' ? m.height : m.height ? Number(m.height) : null,
-        fitness_goal: (m.fitness_goal as FitnessGoal) ?? ''
+        fitness_goal: (m.fitness_goal as FitnessGoal) ?? '',
+        created_at: null
       });
     };
 
@@ -303,6 +308,21 @@ const Profile = () => {
     if (val === 'weight-loss' || val === 'muscle-gain' || val === 'maintenance') return val;
     return 'maintenance';
   }, [userData.fitness_goal]);
+
+  const formatMemberSince = (dateString: string | null): string => {
+    if (!dateString) return 'Membro';
+    
+    const date = new Date(dateString);
+    const months = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    
+    return `Membro desde ${month} ${year}`;
+  };
   // === FIM DAS MODIFICAÇÕES ===
 
   return (
@@ -318,7 +338,7 @@ const Profile = () => {
             />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold truncate px-2">{userData.name || "—"}</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Membro desde Janeiro 2024</p>
+          <p className="text-sm md:text-base text-muted-foreground">{formatMemberSince(userData.created_at)}</p>
           {isPremium ? (
             <Badge className="mt-2 bg-gradient-to-r from-purple-600 to-purple-500 text-white text-xs md:text-sm px-4 py-1">
               <Crown className="w-3 h-3 mr-1" />

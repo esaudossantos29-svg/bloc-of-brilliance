@@ -176,7 +176,7 @@ const NutriAI = () => {
       )}
 
       {isActive && (
-        <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 w-[90vw] max-w-sm md:w-80 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-green-200 dark:border-green-800 z-50">
+        <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 w-[90vw] max-w-xs md:w-72 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-green-200 dark:border-green-800 z-50">
           <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-3 rounded-t-2xl">
             <div className="flex justify-between items-center">
               <div>
@@ -235,7 +235,7 @@ const NutriAI = () => {
               onClose={() => setShowHistory(false)}
             />
           ) : (
-            <div className="h-60 md:h-72 p-3 overflow-y-auto bg-gray-50 dark:bg-gray-950">
+            <div className="h-48 md:h-56 p-3 overflow-y-auto bg-gray-50 dark:bg-gray-950">
               {messages.map((msg, index) => (
                 <div key={index} className={`mb-3 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
                   <div className={`inline-block max-w-[85%] p-2 rounded-xl text-sm ${

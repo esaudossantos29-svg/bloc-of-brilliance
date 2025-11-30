@@ -47,6 +47,12 @@ export const useVoiceRecognition = ({
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const lastProcessedTimeRef = useRef<number>(0);
+  const lastProcessedTextRef = useRef<string>('');
+  const processingFinalRef = useRef(false);
+
+  // Blacklist de palavras de ruído
+  const NOISE_WORDS = new Set(['hm', 'ah', 'uh', 'uhm', 'ahn', 'hmm', 'err', 'ehh', 'éh']);
 
   // Simular nível de áudio (em produção, usar Web Audio API real)
   const startAudioLevelMonitoring = useCallback(() => {
@@ -73,10 +79,66 @@ export const useVoiceRecognition = ({
     }
   }, []);
 
+  // Validar se o conteúdo é válido (não é ruído)
+  const isValidContent = useCallback((text: string): boolean => {
+    const trimmed = text.trim().toLowerCase();
+    
+    // Mínimo de 3 caracteres
+    if (trimmed.length < 3) {
+      console.log('❌ Descartado: muito curto -', text);
+      return false;
+    }
+    
+    // Verificar se é apenas ruído
+    const words = trimmed.split(/\s+/);
+    const nonNoiseWords = words.filter(w => !NOISE_WORDS.has(w) && w.length > 0);
+    
+    if (nonNoiseWords.length === 0) {
+      console.log('❌ Descartado: apenas ruído -', text);
+      return false;
+    }
+    
+    // Verificar se tem pelo menos uma palavra com 3+ caracteres
+    const hasValidWord = nonNoiseWords.some(w => w.length >= 3);
+    if (!hasValidWord) {
+      console.log('❌ Descartado: sem palavras válidas -', text);
+      return false;
+    }
+    
+    return true;
+  }, []);
+
   // Processar resultado final
   const processFinalResult = useCallback((transcript: string, confidence: number) => {
-    console.log('✅ Resultado final:', transcript, 'Confiança:', confidence);
+    // Filtro de confiança mínima (60%)
+    if (confidence < 0.6) {
+      console.log('❌ Descartado: confiança baixa -', confidence, transcript);
+      return;
+    }
+    
+    // Validar conteúdo
+    if (!isValidContent(transcript)) {
+      return;
+    }
+    
+    // Cooldown de 1 segundo entre reconhecimentos
+    const now = Date.now();
+    if (now - lastProcessedTimeRef.current < 1000) {
+      console.log('⏱️ Cooldown ativo, ignorando:', transcript);
+      return;
+    }
+    
+    // Verificar duplicata
+    if (transcript === lastProcessedTextRef.current) {
+      console.log('⚠️ Duplicata detectada, ignorando:', transcript);
+      return;
+    }
+    
+    console.log('✅ Resultado final válido:', transcript, 'Confiança:', confidence);
     clearSilenceTimer();
+    processingFinalRef.current = true;
+    lastProcessedTimeRef.current = now;
+    lastProcessedTextRef.current = transcript;
     
     setState(prev => ({
       ...prev,
@@ -90,9 +152,10 @@ export const useVoiceRecognition = ({
     
     // Voltar para listening após processar
     setTimeout(() => {
+      processingFinalRef.current = false;
       setState(prev => prev.status === 'processing' ? { ...prev, status: 'listening' } : prev);
     }, 300);
-  }, [clearSilenceTimer, onResult]);
+  }, [clearSilenceTimer, onResult, isValidContent]);
 
   // Iniciar reconhecimento
   const start = useCallback(() => {
@@ -167,11 +230,20 @@ export const useVoiceRecognition = ({
 
         if (finalTranscript.trim()) {
           processFinalResult(finalTranscript.trim(), maxConfidence);
-        } else if (interimTranscript.trim()) {
+        } else if (interimTranscript.trim() && !processingFinalRef.current) {
           setState(prev => ({ ...prev, interimTranscript: interimTranscript.trim() }));
+          
+          // Cancelar timer anterior
+          clearSilenceTimer();
           
           // Timer de silêncio adaptativo com validação
           silenceTimerRef.current = setTimeout(() => {
+            // Não processar se já houve resultado final recente
+            if (processingFinalRef.current) {
+              console.log('⏭️ Ignorando interim - resultado final já processado');
+              return;
+            }
+            
             const currentInterim = interimTranscript.trim();
             const wordCount = currentInterim.split(' ').filter(w => w.length > 0).length;
             

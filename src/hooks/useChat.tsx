@@ -41,6 +41,7 @@ export const useChat = (initialVoiceProvider: VoiceProvider = 'google-male') => 
   
   const { speak, isLoading: isVoiceLoading } = useVoice();
   const chatHistoryRef = useRef<Message[]>([]);
+  const lastMessageRef = useRef<{ timestamp: number; content: string }>({ timestamp: 0, content: '' });
 
   // Lista de palavras comuns que NÃO são nomes
   const COMMON_WORDS = new Set([
@@ -218,6 +219,24 @@ export const useChat = (initialVoiceProvider: VoiceProvider = 'google-male') => 
   // Processar mensagem do usuário
   const sendMessage = useCallback(async (content: string, useVoice: boolean = true) => {
     if (!content.trim() || isProcessing) return;
+
+    const now = Date.now();
+    const trimmedContent = content.trim();
+    
+    // Debounce: mínimo de 2 segundos entre mensagens
+    if (now - lastMessageRef.current.timestamp < 2000) {
+      console.log('⏱️ Debounce ativo, ignorando mensagem');
+      return;
+    }
+    
+    // Verificar duplicata
+    if (trimmedContent === lastMessageRef.current.content) {
+      console.log('⚠️ Mensagem duplicada detectada, ignorando');
+      return;
+    }
+    
+    // Atualizar referência
+    lastMessageRef.current = { timestamp: now, content: trimmedContent };
 
     setIsProcessing(true);
     setCurrentMood('thinking'); // Pensativo ao processar

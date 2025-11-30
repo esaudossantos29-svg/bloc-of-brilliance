@@ -29,7 +29,7 @@ const NutriAI = () => {
     language: 'pt-BR',
     continuous: true,
     silenceTimeout: 2000,
-    enabled: isActive && !isAISpeaking,
+    enabled: isActive && !isAISpeaking && !isProcessing,
     onResult: (transcript, confidence) => {
       console.log('🎤 Voz capturada:', transcript, 'Confiança:', confidence);
       sendMessage(transcript, true);

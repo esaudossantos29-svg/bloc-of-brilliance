@@ -10,6 +10,7 @@ import { SaveRecipeDialog } from './SaveRecipeDialog';
 import VoiceIndicator from './VoiceIndicator';
 import VoiceTextInput from './VoiceTextInput';
 import { History, BookmarkPlus, Mic, MicOff } from 'lucide-react';
+import RobotButton from './RobotButton';
 
 const NutriAI = () => {
   const { user } = useAuth();
@@ -164,16 +165,7 @@ const NutriAI = () => {
 
   return (
     <div className="nutri-ai-container">
-      {!isActive && (
-        <button 
-          onClick={activateNutriAI}
-          className="fixed bottom-20 right-4 md:bottom-6 md:right-6 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-3 rounded-full shadow-lg hover:scale-105 transition-transform z-50"
-        >
-          <span className="flex items-center gap-1.5 text-sm md:text-base font-semibold">
-            🧠 NutriAI
-          </span>
-        </button>
-      )}
+      <RobotButton onClick={activateNutriAI} isActive={isActive} />
 
       {isActive && (
         <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 w-[90vw] max-w-xs md:w-72 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-green-200 dark:border-green-800 z-50">

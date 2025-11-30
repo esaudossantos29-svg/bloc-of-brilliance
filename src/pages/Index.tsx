@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { GymCard } from "@/components/GymCard";
 import { StatCard } from "@/components/StatCard";
-import { Dumbbell, Apple, TrendingUp, Zap, Camera, Users, ChefHat, Clock as ClockIcon, Play } from "lucide-react";
+import { Dumbbell, Apple, TrendingUp, Zap, Camera, Users, ChefHat, Clock as ClockIcon } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import heroVideo from "@/assets/hero-video.mp4";
 import heroVideo2 from "@/assets/hero-video-2.mp4";
@@ -29,8 +29,12 @@ const Index = () => {
 
   const videos = [heroVideo, heroVideo2];
 
+  // Usuários navegam livremente pela landing page
+  // Autenticação/onboarding acontece apenas quando clicam em botões específicos
+
   const handleProtectedAction = async (path: string) => {
     if (user) {
+      // Iniciar trial se ainda não foi iniciado
       if (!isTrialActive) {
         await startTrial();
       }
@@ -47,21 +51,22 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section - Netflix Style */}
-      <section className="relative h-screen overflow-hidden">
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
         <video 
           key={currentVideo}
           autoPlay 
           muted 
-          loop
           playsInline
           webkit-playsinline="true"
           preload="auto"
           poster={heroFitnessImage}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover animate-fade-in"
           onLoadedData={(e) => {
             const video = e.currentTarget;
-            video.play().catch(() => {});
+            video.play().catch(() => {
+              // Fallback silencioso se autoplay falhar
+            });
           }}
           onEnded={() => {
             setCurrentVideo((prev) => (prev + 1) % videos.length);
@@ -69,91 +74,85 @@ const Index = () => {
         >
           <source src={videos[currentVideo]} type="video/mp4" />
         </video>
+        <div className="absolute inset-0 bg-gradient-hero opacity-90" />
         
-        {/* Gradiente Netflix */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-transparent" />
-        
-        <div className="relative z-10 h-full flex items-center px-4 md:px-16">
-          <div className="max-w-2xl">
-            <h1 className="text-6xl md:text-8xl font-display font-bold mb-6 text-white netflix-fade-in">
-              nPnG JM
+        <div className="relative z-10 px-4 py-20 text-center text-white">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6">
+              nPnG <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">JM</span>
             </h1>
-            <p className="text-xl md:text-2xl mb-4 text-white/90 font-medium netflix-fade-in" style={{ animationDelay: '0.2s' }}>
-              Seu personal trainer e nutricionista com IA
+            <p className="text-xl md:text-2xl mb-8 text-white/90">
+              Seu personal trainer e nutricionista com IA no bolso
             </p>
-            <p className="text-lg mb-8 text-white/70 max-w-xl netflix-fade-in" style={{ animationDelay: '0.4s' }}>
+            <p className="text-lg mb-12 text-white/80 max-w-2xl mx-auto">
               Combine treinos inteligentes com análise nutricional por IA. Alcance seus objetivos fitness com precisão científica.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 netflix-fade-in" style={{ animationDelay: '0.6s' }}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
-                variant="netflix" 
+                variant="hero" 
                 size="lg" 
-                className="text-lg h-14 px-8"
+                className="w-full sm:w-auto"
                 onClick={() => handleProtectedAction("/dashboard")}
               >
-                <Play className="w-5 h-5 fill-white" />
+                <Zap className="w-5 h-5" />
                 Iniciar Jornada Gratuita
               </Button>
               <Button 
-                variant="netflix-outline" 
+                variant="outline" 
                 size="lg" 
-                className="text-lg h-14 px-8"
+                className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10"
                 onClick={() => handleProtectedAction("/dashboard")}
               >
-                Saiba Mais
+                Ver Demo
               </Button>
             </div>
-            <p className="text-sm text-white/50 mt-6 flex items-center gap-2">
-              <ClockIcon className="w-4 h-4" />
+            <p className="text-sm text-white/60 mt-4 flex items-center justify-center gap-2">
+              <ClockIcon className="w-4 h-4 animate-pulse" />
               Teste grátis por 24 horas
             </p>
           </div>
         </div>
       </section>
 
-      {/* Treinos Section - Netflix Carousel Style */}
-      <section className="py-16 px-4 md:px-16">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold mb-8 text-white">
-            Treinos Populares
-          </h2>
-          
-          <div className="grid md:grid-cols-2 gap-6 mb-16">
+      {/* Features Section */}
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Tudo que você precisa para <span className="text-primary">transformar</span> seu corpo
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Tecnologia avançada de IA combinada com ciência do exercício para resultados comprovados
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-16">
+            {/* Fitness Feature */}
             <GymCard 
               variant="fitness"
               title="Treinos Inteligentes"
               description="Rotinas personalizadas baseadas em seus objetivos"
-              className="p-8 netflix-card-hover"
+              className="p-8"
             >
               <div 
-                className="h-48 bg-cover bg-center rounded-lg mb-4 relative overflow-hidden"
+                className="h-32 bg-cover bg-center rounded-lg mb-4"
                 style={{ backgroundImage: `url(${workoutsImage})` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                <Button 
-                  variant="netflix" 
-                  size="icon"
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full"
-                >
-                  <Play className="w-8 h-8 fill-white" />
-                </Button>
-              </div>
-              <div className="space-y-3 text-sm text-foreground/80">
-                <div className="flex items-center gap-2">
-                  <Dumbbell className="w-5 h-5 text-primary" />
+              />
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Dumbbell className="w-6 h-6 text-primary" />
                   <span>350+ exercícios com demonstrações</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-primary" />
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="w-6 h-6 text-primary" />
                   <span>Acompanhamento de progresso</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-primary" />
+                <div className="flex items-center gap-3">
+                  <Zap className="w-6 h-6 text-primary" />
                   <span>Adaptação automática de cargas</span>
                 </div>
                 <Button 
-                  variant="netflix" 
+                  variant="fitness" 
                   className="w-full mt-4"
                   onClick={() => handleProtectedAction("/workouts")}
                 >
@@ -162,40 +161,32 @@ const Index = () => {
               </div>
             </GymCard>
 
+            {/* Nutrition Feature */}
             <GymCard 
               variant="nutrition"
               title="Nutrição com IA"
               description="Análise instantânea de refeições com 90% de precisão"
-              className="p-8 netflix-card-hover"
+              className="p-8"
             >
               <div 
-                className="h-48 bg-cover bg-center rounded-lg mb-4 relative overflow-hidden"
+                className="h-32 bg-cover bg-center rounded-lg mb-4"
                 style={{ backgroundImage: `url(${nutritionImage})` }}
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                <Button 
-                  variant="netflix" 
-                  size="icon"
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full"
-                >
-                  <Play className="w-8 h-8 fill-white" />
-                </Button>
-              </div>
-              <div className="space-y-3 text-sm text-foreground/80">
-                <div className="flex items-center gap-2">
-                  <Camera className="w-5 h-5 text-primary" />
+              />
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Camera className="w-6 h-6 text-secondary" />
                   <span>Foto → Calorias e macros</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Apple className="w-5 h-5 text-primary" />
+                <div className="flex items-center gap-3">
+                  <Apple className="w-6 h-6 text-secondary" />
                   <span>Planos de dieta personalizados</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <ChefHat className="w-5 h-5 text-primary" />
+                <div className="flex items-center gap-3">
+                  <ChefHat className="w-6 h-6 text-secondary" />
                   <span>Receitas sugeridas pela IA</span>
                 </div>
                 <Button
-                  variant="netflix" 
+                  variant="nutrition" 
                   className="w-full mt-4"
                   onClick={() => handleProtectedAction("/nutrition")}
                 >
@@ -206,16 +197,16 @@ const Index = () => {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="netflix-fade-in" style={{ animationDelay: '0ms' }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
+            <div className="animate-fade-in" style={{ animationDelay: '0ms' }}>
               <StatCard
                 icon={<Users className="w-6 h-6" />}
-                title="Usuários Ativos"
+                title="Capacidade +50K Usuários Ativos"
                 value="50K+"
-                variant="default"
+                variant="fitness"
               />
             </div>
-            <div className="netflix-fade-in" style={{ animationDelay: '100ms' }}>
+            <div className="animate-fade-in" style={{ animationDelay: '100ms' }}>
               <StatCard
                 icon={<Dumbbell className="w-6 h-6" />}
                 title="Exercícios"
@@ -223,7 +214,7 @@ const Index = () => {
                 variant="fitness"
               />
             </div>
-            <div className="netflix-fade-in" style={{ animationDelay: '200ms' }}>
+            <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
               <StatCard
                 icon={<Apple className="w-6 h-6" />}
                 title="Refeições Analisadas"
@@ -231,36 +222,31 @@ const Index = () => {
                 variant="nutrition"
               />
             </div>
-            <div className="netflix-fade-in" style={{ animationDelay: '300ms' }}>
+            <div className="animate-fade-in" style={{ animationDelay: '300ms' }}>
               <StatCard
                 icon={<TrendingUp className="w-6 h-6" />}
                 title="Precisão IA"
                 value="90%+"
-                variant="default"
+                variant="nutrition"
               />
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-4 text-center">
-        <div className="max-w-3xl mx-auto">
-          <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">
-            Pronto para sua transformação?
-          </h3>
-          <p className="text-lg text-foreground/60 mb-8">
-            Junte-se a milhares de pessoas que já estão alcançando seus objetivos
-          </p>
-          <Button 
-            variant="netflix" 
-            size="lg"
-            className="text-lg h-14 px-12"
-            onClick={() => handleProtectedAction("/dashboard")}
-          >
-            <Play className="w-5 h-5 fill-white" />
-            Começar Agora
-          </Button>
+          {/* CTA Section */}
+          <div className="text-center">
+            <h3 className="text-2xl font-bold mb-4">Pronto para começar sua transformação?</h3>
+            <p className="text-muted-foreground mb-8">
+              Junte-se a milhares de pessoas que já estão alcançando seus objetivos com o nPnG JM
+            </p>
+            <Button 
+              variant="hero" 
+              size="lg"
+              onClick={() => handleProtectedAction("/dashboard")}
+            >
+              <Zap className="w-5 h-5" />
+              Iniciar Jornada Gratuita
+            </Button>
+          </div>
         </div>
       </section>
 

@@ -17,75 +17,98 @@ const RobotButton = ({ onClick, isActive }: RobotButtonProps) => {
       transition={{ duration: 0.3 }}
     >
       {/* Container do robô */}
-      <div className="relative w-20 h-20 md:w-24 md:h-24">
-        {/* Sombra */}
-        <div className="absolute inset-0 bg-gradient-to-br from-green-500/20 to-emerald-600/20 blur-xl rounded-full" />
+      <div className="relative w-24 h-24 md:w-28 md:h-28">
+        {/* Sombra suave */}
+        <div className="absolute inset-0 bg-gradient-to-br from-green-400/30 to-emerald-500/30 blur-2xl rounded-full" />
         
         {/* Corpo do robô */}
         <motion.svg
-          viewBox="0 0 100 100"
+          viewBox="0 0 120 120"
           className="w-full h-full drop-shadow-2xl"
           animate={isActive ? "active" : "sleeping"}
         >
           {/* Cabeça do robô */}
           <motion.g
             variants={{
-              sleeping: { y: 5, rotate: 15 },
+              sleeping: { y: 3, rotate: 10 },
               active: { y: 0, rotate: 0 }
             }}
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            {/* Corpo principal */}
+            {/* Corpo principal - mais arredondado */}
             <rect
-              x="25"
-              y="35"
-              width="50"
-              height="50"
-              rx="12"
-              className="fill-gradient-to-br from-green-500 to-emerald-600"
+              x="30"
+              y="40"
+              width="60"
+              height="60"
+              rx="20"
               fill="url(#robotGradient)"
+              filter="url(#softGlow)"
             />
             
-            {/* Antena */}
+            {/* Antena fofa com coração */}
             <motion.g
               animate={{
-                y: [0, -2, 0],
+                y: [0, -3, 0],
+                rotate: [0, -5, 5, 0]
               }}
               transition={{
-                duration: 2,
+                duration: 3,
                 repeat: Infinity,
                 ease: "easeInOut"
               }}
             >
               <line
-                x1="50"
-                y1="35"
-                x2="50"
-                y2="25"
+                x1="60"
+                y1="40"
+                x2="60"
+                y2="28"
                 stroke="#10b981"
-                strokeWidth="2"
+                strokeWidth="3"
                 strokeLinecap="round"
               />
-              <circle cx="50" cy="23" r="3" fill="#34d399" />
+              {/* Coração na ponta da antena */}
+              <path
+                d="M60 30 C55 26, 50 28, 50 32 C50 35, 55 38, 60 40 C65 38, 70 35, 70 32 C70 28, 65 26, 60 30"
+                fill="#ef4444"
+                stroke="#dc2626"
+                strokeWidth="0.5"
+              />
+              <motion.circle
+                cx="60"
+                cy="32"
+                r="1.5"
+                fill="#fff"
+                opacity="0.8"
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: [0.8, 1, 0.8]
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity
+                }}
+              />
             </motion.g>
 
-            {/* Olhos */}
+            {/* Olhos grandes e expressivos */}
             <motion.g
               variants={{
-                sleeping: { scaleY: 0.1 },
-                active: { scaleY: 1 }
+                sleeping: { scaleY: 0.15, y: 2 },
+                active: { scaleY: 1, y: 0 }
               }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.4, ease: "backOut" }}
             >
-              <ellipse cx="38" cy="52" rx="5" ry="6" fill="#fff" />
-              <ellipse cx="62" cy="52" rx="5" ry="6" fill="#fff" />
+              {/* Olho esquerdo */}
+              <circle cx="45" cy="60" r="8" fill="#fff" />
               <motion.circle
-                cx="38"
-                cy="52"
-                r="3"
+                cx="45"
+                cy="60"
+                r="5"
                 fill="#1f2937"
                 animate={isActive ? {
                   x: [0, 2, -2, 0],
+                  scale: [1, 0.95, 1]
                 } : {}}
                 transition={{
                   duration: 3,
@@ -93,13 +116,20 @@ const RobotButton = ({ onClick, isActive }: RobotButtonProps) => {
                   repeatDelay: 2
                 }}
               />
+              {/* Brilho no olho */}
+              <circle cx="47" cy="58" r="2.5" fill="#fff" opacity="0.9" />
+              <circle cx="43.5" cy="61" r="1" fill="#fff" opacity="0.6" />
+              
+              {/* Olho direito */}
+              <circle cx="75" cy="60" r="8" fill="#fff" />
               <motion.circle
-                cx="62"
-                cy="52"
-                r="3"
+                cx="75"
+                cy="60"
+                r="5"
                 fill="#1f2937"
                 animate={isActive ? {
                   x: [0, 2, -2, 0],
+                  scale: [1, 0.95, 1]
                 } : {}}
                 transition={{
                   duration: 3,
@@ -107,19 +137,58 @@ const RobotButton = ({ onClick, isActive }: RobotButtonProps) => {
                   repeatDelay: 2
                 }}
               />
+              {/* Brilho no olho */}
+              <circle cx="77" cy="58" r="2.5" fill="#fff" opacity="0.9" />
+              <circle cx="73.5" cy="61" r="1" fill="#fff" opacity="0.6" />
             </motion.g>
 
-            {/* Boca */}
+            {/* Bochechas rosadas */}
+            <motion.circle
+              cx="28"
+              cy="68"
+              r="6"
+              fill="#fca5a5"
+              opacity="0.5"
+              animate={isActive ? {
+                opacity: [0.5, 0.7, 0.5],
+                scale: [1, 1.1, 1]
+              } : {
+                opacity: 0.4
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity
+              }}
+            />
+            <motion.circle
+              cx="92"
+              cy="68"
+              r="6"
+              fill="#fca5a5"
+              opacity="0.5"
+              animate={isActive ? {
+                opacity: [0.5, 0.7, 0.5],
+                scale: [1, 1.1, 1]
+              } : {
+                opacity: 0.4
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity
+              }}
+            />
+
+            {/* Boca super fofa */}
             <motion.path
-              d={isActive ? "M 38 68 Q 50 73 62 68" : "M 38 68 Q 50 70 62 68"}
+              d={isActive ? "M 45 80 Q 60 88 75 80" : "M 45 80 Q 60 83 75 80"}
               stroke="#fff"
-              strokeWidth="2"
+              strokeWidth="3"
               fill="none"
               strokeLinecap="round"
               animate={{
                 d: isActive 
-                  ? ["M 38 68 Q 50 73 62 68", "M 38 68 Q 50 75 62 68", "M 38 68 Q 50 73 62 68"]
-                  : "M 38 68 Q 50 70 62 68"
+                  ? ["M 45 80 Q 60 88 75 80", "M 45 80 Q 60 90 75 80", "M 45 80 Q 60 88 75 80"]
+                  : "M 45 80 Q 60 83 75 80"
               }}
               transition={{
                 duration: 2,
@@ -128,18 +197,93 @@ const RobotButton = ({ onClick, isActive }: RobotButtonProps) => {
               }}
             />
 
-            {/* Detalhes decorativos */}
-            <circle cx="32" cy="45" r="2" fill="#34d399" opacity="0.6" />
-            <circle cx="68" cy="45" r="2" fill="#34d399" opacity="0.6" />
-            <rect x="45" y="75" width="10" height="3" rx="1.5" fill="#34d399" opacity="0.6" />
+            {/* Língua (aparece quando ativo) */}
+            {isActive && (
+              <motion.ellipse
+                cx="60"
+                cy="86"
+                rx="4"
+                ry="3"
+                fill="#ff6b9d"
+                initial={{ opacity: 0, scaleY: 0 }}
+                animate={{ 
+                  opacity: [0, 1, 1, 0],
+                  scaleY: [0, 1, 1, 0]
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  repeatDelay: 4
+                }}
+              />
+            )}
+
+            {/* Detalhes decorativos - botões fofos */}
+            <motion.circle
+              cx="38"
+              cy="50"
+              r="2.5"
+              fill="#34d399"
+              opacity="0.8"
+              animate={{
+                opacity: [0.8, 1, 0.8],
+                scale: [1, 1.2, 1]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: 0
+              }}
+            />
+            <motion.circle
+              cx="82"
+              cy="50"
+              r="2.5"
+              fill="#34d399"
+              opacity="0.8"
+              animate={{
+                opacity: [0.8, 1, 0.8],
+                scale: [1, 1.2, 1]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: 0.5
+              }}
+            />
+            <motion.rect
+              x="55"
+              y="92"
+              width="10"
+              height="4"
+              rx="2"
+              fill="#34d399"
+              opacity="0.7"
+              animate={{
+                opacity: [0.7, 1, 0.7]
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                delay: 1
+              }}
+            />
           </motion.g>
 
-          {/* Gradiente */}
+          {/* Gradientes e filtros */}
           <defs>
             <linearGradient id="robotGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#34d399" />
               <stop offset="100%" stopColor="#059669" />
             </linearGradient>
+            <filter id="softGlow">
+              <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
           </defs>
         </motion.svg>
 

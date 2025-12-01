@@ -59,6 +59,7 @@ const Profile = () => {
     goal_weight: null
   });
   const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [selectedGoal, setSelectedGoal] = useState<string>('');
   
   const [preferences, setPreferences] = useState<UserPreferences>({
     workoutNotifications: false,
@@ -94,16 +95,20 @@ const Profile = () => {
                          displayName.split('@')[0].replace(/[.+]/g, ' ');
           }
           
+          const fitnessGoal = profile.fitness_goal as FitnessGoal ?? '';
           setUserData({
             name: displayName,
             email: user.email ?? '',
             age: profile.age ?? null,
             weight: profile.weight ?? null,
             height: profile.height ?? null,
-            fitness_goal: profile.fitness_goal as FitnessGoal ?? '',
+            fitness_goal: fitnessGoal,
             created_at: profile.created_at ?? null,
             goal_weight: profile.goal_weight ?? null
           });
+          
+          // Setar o goal selecionado no formato do Select
+          setSelectedGoal(fitnessGoal ? fitnessGoal.replace('_', '-') : 'maintenance');
           return;
         }
       } catch (error) {
@@ -324,6 +329,9 @@ const Profile = () => {
       const weightInput = document.getElementById('weight') as HTMLInputElement;
       const goalWeightInput = document.getElementById('goal-weight') as HTMLInputElement;
 
+      // Converter o valor do Select de volta para formato do banco (weight-loss → weight_loss)
+      const goalForDb = selectedGoal ? selectedGoal.replace('-', '_') : userData.fitness_goal;
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -332,6 +340,7 @@ const Profile = () => {
           height: heightInput?.value ? Number(heightInput.value) : userData.height,
           weight: weightInput?.value ? Number(weightInput.value) : userData.weight,
           goal_weight: goalWeightInput?.value ? Number(goalWeightInput.value) : userData.goal_weight,
+          fitness_goal: goalForDb,
         })
         .eq('user_id', user.id);
 
@@ -345,6 +354,7 @@ const Profile = () => {
         height: heightInput?.value ? Number(heightInput.value) : prev.height,
         weight: weightInput?.value ? Number(weightInput.value) : prev.weight,
         goal_weight: goalWeightInput?.value ? Number(goalWeightInput.value) : prev.goal_weight,
+        fitness_goal: goalForDb as FitnessGoal,
       }));
 
       toast({
@@ -498,7 +508,10 @@ const Profile = () => {
               
               <div>
                 <Label htmlFor="goal">Objetivo principal</Label>
-                <Select defaultValue={goalValueForSelect}>
+                <Select 
+                  value={selectedGoal || goalValueForSelect} 
+                  onValueChange={(value) => setSelectedGoal(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -506,8 +519,6 @@ const Profile = () => {
                     <SelectItem value="weight-loss">Perda de peso</SelectItem>
                     <SelectItem value="muscle-gain">Ganho de massa</SelectItem>
                     <SelectItem value="maintenance">Manutenção</SelectItem>
-                    <SelectItem value="strength">Ganho de força</SelectItem>
-                    <SelectItem value="endurance">Resistência</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

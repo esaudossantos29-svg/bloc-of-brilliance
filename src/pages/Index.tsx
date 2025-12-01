@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { GymCard } from "@/components/GymCard";
 import { StatCard } from "@/components/StatCard";
-import { Dumbbell, Apple, TrendingUp, Zap, Camera, Users, ChefHat, Clock as ClockIcon, Calendar } from "lucide-react";
+import { Dumbbell, Apple, TrendingUp, Zap, Camera, Users, ChefHat, Clock as ClockIcon, Calendar, Star, Quote } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import heroVideo from "@/assets/hero-video.mp4";
 import heroVideo2 from "@/assets/hero-video-2.mp4";
@@ -237,6 +237,101 @@ const Index = () => {
                 value="21"
                 variant="nutrition"
               />
+            </div>
+          </div>
+
+          {/* Testimonials Section - Dieta de 21 Dias */}
+          <div className="py-16 px-4 bg-gradient-to-br from-green-500/5 via-emerald-500/5 to-green-500/5 rounded-2xl border border-green-500/10 mb-16">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 mb-4">
+                <Calendar className="w-4 h-4 text-green-600" />
+                <span className="text-sm font-medium text-green-600">Dieta de 21 Dias</span>
+              </div>
+              <h3 className="text-3xl font-bold mb-4">
+                Histórias reais de <span className="text-green-600">transformação</span>
+              </h3>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Veja como nossos usuários transformaram suas vidas com a Dieta de 21 Dias
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {/* Depoimento 1 */}
+              <div className="glass-card p-6 rounded-xl hover:shadow-lg transition-smooth animate-fade-in">
+                <Quote className="w-8 h-8 text-green-500/30 mb-4" />
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                  ))}
+                </div>
+                <p className="text-foreground mb-6 italic">
+                  "Perdi 8kg em 21 dias! O plano alimentar é super fácil de seguir e as receitas são deliciosas. Me sinto mais leve e energizada."
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                    MC
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Maria Clara</p>
+                    <p className="text-sm text-muted-foreground">-8kg em 21 dias</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Depoimento 2 */}
+              <div className="glass-card p-6 rounded-xl hover:shadow-lg transition-smooth animate-fade-in" style={{ animationDelay: '100ms' }}>
+                <Quote className="w-8 h-8 text-green-500/30 mb-4" />
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                  ))}
+                </div>
+                <p className="text-foreground mb-6 italic">
+                  "Incrível! Não só perdi 12kg, mas mudei completamente minha relação com a comida. Os resultados são duradouros."
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold">
+                    RS
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Ricardo Silva</p>
+                    <p className="text-sm text-muted-foreground">-12kg em 21 dias</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Depoimento 3 */}
+              <div className="glass-card p-6 rounded-xl hover:shadow-lg transition-smooth animate-fade-in" style={{ animationDelay: '200ms' }}>
+                <Quote className="w-8 h-8 text-green-500/30 mb-4" />
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                  ))}
+                </div>
+                <p className="text-foreground mb-6 italic">
+                  "Método simples e eficaz. Perdi 6kg e aprendi a comer melhor. Recomendo para quem quer resultados reais!"
+                </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-white font-bold">
+                    AF
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Ana Ferreira</p>
+                    <p className="text-sm text-muted-foreground">-6kg em 21 dias</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center mt-8">
+              <Button 
+                variant="nutrition" 
+                size="lg"
+                onClick={() => handleProtectedAction("/diet-21-days")}
+              >
+                <Calendar className="w-5 h-5" />
+                Começar Minha Transformação
+              </Button>
             </div>
           </div>
 

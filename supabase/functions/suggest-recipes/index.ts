@@ -28,10 +28,10 @@ serve(async (req) => {
     };
     const goalContext = goalMap[fitnessGoal] || 'saudável e balanceada';
 
-    const prompt = `Você é um chef especializado em nutrição esportiva e fitness. Gere EXATAMENTE 4 receitas aleatórias e variadas para um objetivo de ${goalContext}.
+    const prompt = `Você é um chef especializado em nutrição esportiva e fitness. Gere EXATAMENTE 3 receitas aleatórias e variadas para um objetivo de ${goalContext}.
 
 IMPORTANTE:
-- As receitas devem ser COMPLETAMENTE DIFERENTES entre si (café da manhã, almoço, lanche, jantar)
+- As receitas devem ser COMPLETAMENTE DIFERENTES entre si (café da manhã, almoço, jantar)
 - Varie os tipos de proteína (frango, peixe, carne vermelha, ovos, leguminosas)
 - Inclua diferentes estilos culinários (brasileiro, mediterrâneo, asiático, etc)
 - Seja criativo e evite receitas genéricas
@@ -77,7 +77,7 @@ RETORNE UM JSON VÁLIDO com este formato EXATO:
         }],
         generationConfig: {
           temperature: 0.7,
-          maxOutputTokens: 4096,
+          maxOutputTokens: 8192,
           responseMimeType: "application/json"
         }
       }),
@@ -102,6 +102,11 @@ RETORNE UM JSON VÁLIDO com este formato EXATO:
 
     const data = await response.json();
     console.log('Resposta da API:', JSON.stringify(data, null, 2));
+
+    const finishReason = data.candidates?.[0]?.finishReason;
+    if (finishReason === 'MAX_TOKENS') {
+      throw new Error('Resposta da IA foi truncada. Tente novamente.');
+    }
 
     const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!content) {

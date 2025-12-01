@@ -17,7 +17,7 @@ const NutriAI = () => {
     voiceProvider,
     setVoiceProvider,
     currentMood
-  } = useChat('google-male');
+  } = useChat('elevenlabs-male');
   
   const [isActive, setIsActive] = useState(false);
   const [isAISpeaking, setIsAISpeaking] = useState(false);

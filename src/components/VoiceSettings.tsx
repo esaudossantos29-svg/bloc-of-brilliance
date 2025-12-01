@@ -14,10 +14,8 @@ interface VoiceSettingsProps {
 }
 
 const voiceOptions: { value: VoiceProvider; label: string; emoji: string }[] = [
-  { value: 'google-male', label: 'Voz Masculina (Google)', emoji: '👨' },
-  { value: 'google-female', label: 'Voz Feminina (Google)', emoji: '👩' },
-  { value: 'elevenlabs-male', label: 'Voz Masculina (ElevenLabs)', emoji: '😊' },
-  { value: 'elevenlabs-female', label: 'Voz Feminina (ElevenLabs)', emoji: '😊' },
+  { value: 'elevenlabs-male', label: 'Voz Masculina', emoji: '👨' },
+  { value: 'elevenlabs-female', label: 'Voz Feminina', emoji: '👩' },
 ];
 
 const VoiceSettings = ({ currentVoice, onVoiceChange }: VoiceSettingsProps) => {

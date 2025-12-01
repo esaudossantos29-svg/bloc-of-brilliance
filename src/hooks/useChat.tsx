@@ -22,7 +22,7 @@ interface Intent {
   data?: string;
 }
 
-export const useChat = (initialVoiceProvider: VoiceProvider = 'google-male') => {
+export const useChat = (initialVoiceProvider: VoiceProvider = 'elevenlabs-male') => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -364,8 +364,8 @@ export const useChat = (initialVoiceProvider: VoiceProvider = 'google-male') => 
       const gender = profile?.gender?.toLowerCase();
       const genderBasedVoice: VoiceProvider = 
         (gender === 'female' || gender === 'feminino' || gender === 'mulher')
-          ? 'google-female'  // Mulher → voz feminina
-          : 'google-male';   // Homem/Outro → voz masculino
+          ? 'elevenlabs-female'  // Mulher → voz feminina
+          : 'elevenlabs-male';   // Homem/Outro → voz masculino
       
       setVoiceProvider(genderBasedVoice);
 

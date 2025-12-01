@@ -26,12 +26,12 @@ export const WelcomeVoice = () => {
           .maybeSingle();
 
         // Buscar preferência de voz do localStorage (migrar formato antigo)
-        let voiceProvider: VoiceProvider = localStorage.getItem('voiceProvider') as VoiceProvider || 'google-male';
+        let voiceProvider: VoiceProvider = localStorage.getItem('voiceProvider') as VoiceProvider || 'elevenlabs-male';
         
         // Migrar formato antigo (male/female) para novo formato
         const oldGender = localStorage.getItem("userGender");
         if (oldGender && !localStorage.getItem('voiceProvider')) {
-          voiceProvider = oldGender === 'female' ? 'google-female' : 'google-male';
+          voiceProvider = oldGender === 'female' ? 'elevenlabs-female' : 'elevenlabs-male';
           localStorage.setItem('voiceProvider', voiceProvider);
         }
 

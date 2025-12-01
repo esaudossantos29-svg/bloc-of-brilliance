@@ -1,0 +1,131 @@
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { RobotKawaii } from './robots/RobotKawaii';
+import { RobotChef } from './robots/RobotChef';
+import { RobotApple } from './robots/RobotApple';
+import { RobotSalad } from './robots/RobotSalad';
+import { RobotCapsule } from './robots/RobotCapsule';
+import { Button } from './ui/button';
+import { Check } from 'lucide-react';
+
+interface RobotSelectorProps {
+  onSelect: (robotType: string) => void;
+  currentSelection?: string;
+}
+
+const robots = [
+  {
+    id: 'kawaii',
+    name: 'Kawaii Verde',
+    description: 'Fofo e acolhedor com antenas de folha',
+    component: RobotKawaii,
+  },
+  {
+    id: 'chef',
+    name: 'Chef Clássico',
+    description: 'Profissional com chapéu de chef',
+    component: RobotChef,
+  },
+  {
+    id: 'apple',
+    name: 'Maçã Saudável',
+    description: 'Em formato de maçã vermelha',
+    component: RobotApple,
+  },
+  {
+    id: 'salad',
+    name: 'Tigela de Salada',
+    description: 'Colorido como uma salada fresca',
+    component: RobotSalad,
+  },
+  {
+    id: 'capsule',
+    name: 'Cápsula Científica',
+    description: 'Moderno e tecnológico',
+    component: RobotCapsule,
+  },
+];
+
+export const RobotSelector = ({ onSelect, currentSelection = 'kawaii' }: RobotSelectorProps) => {
+  const [selected, setSelected] = useState(currentSelection);
+  const [hoveredRobot, setHoveredRobot] = useState<string | null>(null);
+
+  const handleSelect = (robotId: string) => {
+    setSelected(robotId);
+  };
+
+  const handleConfirm = () => {
+    onSelect(selected);
+  };
+
+  return (
+    <div className="w-full max-w-6xl mx-auto p-6 space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl font-bold text-foreground">🤖 Escolha seu NutriAI Assistant 🥗</h2>
+        <p className="text-muted-foreground">
+          Passe o mouse para ver a animação • Clique para selecionar
+        </p>
+      </div>
+
+      {/* Robot Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        {robots.map((robot) => {
+          const RobotComponent = robot.component;
+          const isSelected = selected === robot.id;
+          const isHovered = hoveredRobot === robot.id;
+
+          return (
+            <motion.div
+              key={robot.id}
+              className={`relative cursor-pointer rounded-xl p-4 transition-all duration-300 ${
+                isSelected
+                  ? 'bg-primary/10 ring-4 ring-primary shadow-lg'
+                  : 'bg-muted hover:bg-muted/70 hover:shadow-md'
+              }`}
+              onClick={() => handleSelect(robot.id)}
+              onMouseEnter={() => setHoveredRobot(robot.id)}
+              onMouseLeave={() => setHoveredRobot(null)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {/* Selection Checkmark */}
+              {isSelected && (
+                <motion.div
+                  className="absolute -top-2 -right-2 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg z-10"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                >
+                  <Check className="w-5 h-5 text-primary-foreground" />
+                </motion.div>
+              )}
+
+              {/* Robot Preview */}
+              <div className="w-full aspect-square mb-3">
+                <RobotComponent isActive={isHovered || isSelected} mood="happy" />
+              </div>
+
+              {/* Robot Info */}
+              <div className="text-center space-y-1">
+                <h3 className="font-semibold text-sm text-foreground">{robot.name}</h3>
+                <p className="text-xs text-muted-foreground">{robot.description}</p>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Confirm Button */}
+      <div className="flex justify-center pt-4">
+        <Button
+          size="lg"
+          onClick={handleConfirm}
+          className="min-w-[200px] font-semibold"
+        >
+          ✓ Confirmar Seleção
+        </Button>
+      </div>
+    </div>
+  );
+};

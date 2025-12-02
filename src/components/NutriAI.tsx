@@ -1,21 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/untyped';
 import { useChat } from '@/hooks/useChat';
-import { VoiceProvider } from '@/hooks/useVoice';
 import { useVoiceRecognition } from '@/hooks/useVoiceRecognition';
 import { SaveRecipeDialog } from './SaveRecipeDialog';
 import RobotButton from './RobotButton';
 
 const NutriAI = () => {
-  const { user } = useAuth();
   const { 
     messages, 
     sendMessage, 
     startConversation,
     isProcessing,
-    voiceProvider,
-    setVoiceProvider,
     currentMood
   } = useChat('elevenlabs-male');
   
@@ -105,7 +99,7 @@ const NutriAI = () => {
         isListening={voiceRecognition.status === 'listening' && !isAISpeaking}
         isSpeaking={isAISpeaking}
         isProcessing={isProcessing}
-        mood={currentMood}
+        mood={currentMood as any}
       />
 
       <SaveRecipeDialog 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useVoiceActivityDetection } from './useVoiceActivityDetection';
 
 export type VoiceRecognitionStatus = 'idle' | 'listening' | 'processing' | 'error' | 'unsupported';
 
@@ -10,6 +11,8 @@ interface VoiceRecognitionState {
   audioLevel: number;
   error: string | null;
   isSupported: boolean;
+  isVoiceDetected: boolean;
+  isNoise: boolean;
 }
 
 interface UseVoiceRecognitionOptions {
@@ -20,6 +23,42 @@ interface UseVoiceRecognitionOptions {
   onError?: (error: string) => void;
   enabled?: boolean;
 }
+
+// Padrões de ruído expandidos
+const NOISE_PATTERNS = {
+  // Sons vocálicos não-verbais
+  vocalNoises: new Set([
+    'hm', 'ah', 'uh', 'uhm', 'ahn', 'hmm', 'err', 'ehh', 'éh', 'mmm',
+    'ãh', 'oh', 'ih', 'aah', 'uuh', 'eeh', 'hã', 'ham', 'hem', 'him',
+    'ó', 'é', 'á', 'í', 'ú', 'hum', 'humm', 'ahã', 'uhum', 'mhm'
+  ]),
+  
+  // Onomatopeias de ruído ambiental
+  environmentalSounds: new Set([
+    'tss', 'shh', 'psiu', 'fff', 'sss', 'zzz', 'click', 'pop', 'tsc',
+    'pff', 'pfff', 'tch', 'tchau', 'plim', 'plom', 'bip', 'beep'
+  ]),
+  
+  // Palavras muito curtas frequentemente falsas
+  shortFalsePositives: new Set([
+    'a', 'e', 'i', 'o', 'u', 'é', 'há', 'ah', 'ai', 'ei', 'ou', 'eu'
+  ]),
+};
+
+// Detectar padrões de eco/repetição
+const hasEchoPattern = (text: string): boolean => {
+  const words = text.toLowerCase().split(/\s+/);
+  if (words.length < 4) return false;
+  
+  // Verificar se há repetição excessiva
+  const wordCount: Record<string, number> = {};
+  words.forEach(w => {
+    wordCount[w] = (wordCount[w] || 0) + 1;
+  });
+  
+  // Se alguma palavra aparece mais de 50% das vezes, é eco
+  return Object.values(wordCount).some(count => count / words.length > 0.5);
+};
 
 export const useVoiceRecognition = ({
   language = 'pt-BR',
@@ -37,39 +76,37 @@ export const useVoiceRecognition = ({
     audioLevel: 0,
     error: null,
     isSupported: typeof window !== 'undefined' && 
-                 ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)
+                 ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window),
+    isVoiceDetected: false,
+    isNoise: false
   });
 
   const recognitionRef = useRef<any>(null);
   const isActiveRef = useRef(false);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef(0);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const lastProcessedTimeRef = useRef<number>(0);
   const lastProcessedTextRef = useRef<string>('');
   const processingFinalRef = useRef(false);
 
-  // Blacklist de palavras de ruído
-  const NOISE_WORDS = new Set(['hm', 'ah', 'uh', 'uhm', 'ahn', 'hmm', 'err', 'ehh', 'éh']);
+  // Hook de detecção de atividade de voz (VAD)
+  const voiceActivity = useVoiceActivityDetection({
+    enabled: enabled && state.status === 'listening',
+    onNoiseDetected: () => {
+      console.log('🔇 Ruído ambiental detectado - ignorando');
+    }
+  });
 
-  // Simular nível de áudio (em produção, usar Web Audio API real)
-  const startAudioLevelMonitoring = useCallback(() => {
-    let level = 0;
-    const updateLevel = () => {
-      if (state.status === 'listening') {
-        // Simulação de nível de áudio variável
-        level = 30 + Math.random() * 60;
-      } else {
-        level = Math.max(0, level - 5);
-      }
-      
-      setState(prev => ({ ...prev, audioLevel: level }));
-      animationFrameRef.current = requestAnimationFrame(updateLevel);
-    };
-    updateLevel();
-  }, [state.status]);
+  // Atualizar estado com dados do VAD
+  useEffect(() => {
+    setState(prev => ({
+      ...prev,
+      audioLevel: voiceActivity.energyLevel,
+      isVoiceDetected: voiceActivity.isVoiceDetected,
+      isNoise: voiceActivity.isNoise
+    }));
+  }, [voiceActivity.energyLevel, voiceActivity.isVoiceDetected, voiceActivity.isNoise]);
 
   // Limpar timer de silêncio
   const clearSilenceTimer = useCallback(() => {
@@ -79,38 +116,73 @@ export const useVoiceRecognition = ({
     }
   }, []);
 
+  // Verificar se o texto é provavelmente ruído
+  const isLikelyNoise = useCallback((text: string): boolean => {
+    const trimmed = text.trim().toLowerCase();
+    const words = trimmed.split(/\s+/).filter(w => w.length > 0);
+    
+    // Texto muito curto
+    if (trimmed.length < 3) return true;
+    
+    // Todas as palavras são ruídos conhecidos
+    const nonNoiseWords = words.filter(w => 
+      !NOISE_PATTERNS.vocalNoises.has(w) &&
+      !NOISE_PATTERNS.environmentalSounds.has(w) &&
+      !NOISE_PATTERNS.shortFalsePositives.has(w)
+    );
+    
+    if (nonNoiseWords.length === 0) return true;
+    
+    // Verificar padrão de eco
+    if (hasEchoPattern(trimmed)) return true;
+    
+    // Alta proporção de palavras de ruído
+    if (nonNoiseWords.length / words.length < 0.3) return true;
+    
+    return false;
+  }, []);
+
   // Validar se o conteúdo é válido (não é ruído)
   const isValidContent = useCallback((text: string): boolean => {
     const trimmed = text.trim().toLowerCase();
     
-    // Mínimo de 3 caracteres
-    if (trimmed.length < 3) {
-      console.log('❌ Descartado: muito curto -', text);
-      return false;
-    }
-    
-    // Verificar se é apenas ruído
-    const words = trimmed.split(/\s+/);
-    const nonNoiseWords = words.filter(w => !NOISE_WORDS.has(w) && w.length > 0);
-    
-    if (nonNoiseWords.length === 0) {
-      console.log('❌ Descartado: apenas ruído -', text);
+    // Verificar ruído baseado em padrões de texto
+    if (isLikelyNoise(trimmed)) {
+      console.log('❌ Descartado (padrão de ruído):', text);
       return false;
     }
     
     // Verificar se tem pelo menos uma palavra com 3+ caracteres
-    const hasValidWord = nonNoiseWords.some(w => w.length >= 3);
+    const words = trimmed.split(/\s+/);
+    const hasValidWord = words.some(w => 
+      w.length >= 3 && 
+      !NOISE_PATTERNS.vocalNoises.has(w) &&
+      !NOISE_PATTERNS.environmentalSounds.has(w)
+    );
+    
     if (!hasValidWord) {
       console.log('❌ Descartado: sem palavras válidas -', text);
       return false;
     }
     
     return true;
-  }, []);
+  }, [isLikelyNoise]);
 
   // Processar resultado final
   const processFinalResult = useCallback((transcript: string, confidence: number) => {
-    // Filtro de confiança mínima (60%)
+    // NOVO: Verificar se VAD detectou voz humana
+    if (voiceActivity.isNoise && !voiceActivity.isVoiceDetected) {
+      console.log('🔇 Descartado pelo VAD: ruído detectado, não é voz humana');
+      return;
+    }
+
+    // Verificar confiança do VAD
+    if (voiceActivity.confidence < 0.4 && voiceActivity.isActive) {
+      console.log('🔇 Descartado pelo VAD: confiança muito baixa -', voiceActivity.confidence);
+      return;
+    }
+
+    // Filtro de confiança mínima do reconhecimento (60%)
     if (confidence < 0.6) {
       console.log('❌ Descartado: confiança baixa -', confidence, transcript);
       return;
@@ -134,7 +206,7 @@ export const useVoiceRecognition = ({
       return;
     }
     
-    console.log('✅ Resultado final válido:', transcript, 'Confiança:', confidence);
+    console.log('✅ Resultado final válido:', transcript, 'Confiança:', confidence, 'VAD:', voiceActivity.confidence);
     clearSilenceTimer();
     processingFinalRef.current = true;
     lastProcessedTimeRef.current = now;
@@ -155,7 +227,7 @@ export const useVoiceRecognition = ({
       processingFinalRef.current = false;
       setState(prev => prev.status === 'processing' ? { ...prev, status: 'listening' } : prev);
     }, 300);
-  }, [clearSilenceTimer, onResult, isValidContent]);
+  }, [clearSilenceTimer, onResult, isValidContent, voiceActivity.isNoise, voiceActivity.isVoiceDetected, voiceActivity.confidence, voiceActivity.isActive]);
 
   // Iniciar reconhecimento
   const start = useCallback(() => {
@@ -184,7 +256,7 @@ export const useVoiceRecognition = ({
       recognition.maxAlternatives = 3;
 
       recognition.onstart = () => {
-        console.log('🎤 Reconhecimento iniciado');
+        console.log('🎤 Reconhecimento iniciado (com VAD)');
         isActiveRef.current = true;
         retryCountRef.current = 0;
         setState(prev => ({ ...prev, status: 'listening', error: null }));
@@ -210,6 +282,12 @@ export const useVoiceRecognition = ({
       };
 
       recognition.onresult = (event: any) => {
+        // NOVO: Gate de voz - só processar se VAD detectou voz humana
+        if (voiceActivity.isActive && voiceActivity.isNoise && !voiceActivity.isVoiceDetected) {
+          console.log('🔇 Ignorando resultado - VAD detectou ruído');
+          return;
+        }
+
         clearSilenceTimer();
         
         let finalTranscript = '';
@@ -241,6 +319,12 @@ export const useVoiceRecognition = ({
             // Não processar se já houve resultado final recente
             if (processingFinalRef.current) {
               console.log('⏭️ Ignorando interim - resultado final já processado');
+              return;
+            }
+
+            // NOVO: Verificar VAD antes de processar interim
+            if (voiceActivity.isNoise && !voiceActivity.isVoiceDetected) {
+              console.log('🔇 Ignorando interim - VAD detectou ruído');
               return;
             }
             
@@ -302,7 +386,7 @@ export const useVoiceRecognition = ({
       }));
       onError?.('Erro ao iniciar reconhecimento de voz');
     }
-  }, [state.isSupported, enabled, continuous, language, silenceTimeout, clearSilenceTimer, processFinalResult, onError]);
+  }, [state.isSupported, enabled, continuous, language, silenceTimeout, clearSilenceTimer, processFinalResult, onError, voiceActivity.isActive, voiceActivity.isNoise, voiceActivity.isVoiceDetected]);
 
   // Parar reconhecimento
   const stop = useCallback(() => {
@@ -334,13 +418,11 @@ export const useVoiceRecognition = ({
   // Refs estáveis para funções (evitar loop infinito)
   const startRef = useRef(start);
   const stopRef = useRef(stop);
-  const startAudioLevelMonitoringRef = useRef(startAudioLevelMonitoring);
   
   // Atualizar refs quando funções mudarem
   useEffect(() => {
     startRef.current = start;
     stopRef.current = stop;
-    startAudioLevelMonitoringRef.current = startAudioLevelMonitoring;
   });
 
   // Ref para rastrear enabled
@@ -354,7 +436,6 @@ export const useVoiceRecognition = ({
     if (enabled && state.isSupported) {
       const timer = setTimeout(() => {
         startRef.current();
-        startAudioLevelMonitoringRef.current();
       }, 500);
       return () => {
         clearTimeout(timer);
@@ -369,9 +450,6 @@ export const useVoiceRecognition = ({
   useEffect(() => {
     return () => {
       stopRef.current();
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
     };
   }, []);
 
@@ -379,6 +457,7 @@ export const useVoiceRecognition = ({
     ...state,
     start,
     stop,
-    resetError
+    resetError,
+    voiceActivity // Expor estado do VAD
   };
 };

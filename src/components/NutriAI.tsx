@@ -83,6 +83,11 @@ const NutriAI = () => {
         await startConversation();
       }
 
+      // Ativar reconhecimento de voz automaticamente após acordar
+      setTimeout(() => {
+        startListening();
+      }, 1000);
+
       setTimeout(() => {
         setShowDialogue(false);
       }, 5000);

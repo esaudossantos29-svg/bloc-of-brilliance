@@ -265,7 +265,7 @@ const NutriCharacter = ({ isActive, isSpeaking, mood, size = 120 }: NutriCharact
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          {/* Balão principal com flutuação */}
+          {/* Balão principal com flutuação expressiva */}
           <motion.ellipse 
             cx="175" 
             cy="35" 
@@ -275,10 +275,11 @@ const NutriCharacter = ({ isActive, isSpeaking, mood, size = 120 }: NutriCharact
             stroke="hsl(210 20% 85%)" 
             strokeWidth="1"
             animate={{ 
-              y: [0, -3, 0],
-              scaleY: [1, 1.03, 1]
+              y: [0, -8, 0],
+              scale: [1, 1.08, 1],
+              rotate: [-2, 2, -2]
             }}
-            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
           />
           
           {/* Bolinhas de conexão com pulso */}

@@ -62,6 +62,8 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
   const isMobile = useIsMobile();
   // Chaves separadas para mobile e desktop
   const storageKey = `muscle-labels-${view}-${isMobile ? 'mobile' : 'desktop'}`;
+  const globalSettingsKey = `muscle-map-global-settings-${view}-${isMobile ? 'mobile' : 'desktop'}`;
+  
   const [labels, setLabels] = useState<MuscleLabel[]>(() => {
     const saved = localStorage.getItem(storageKey);
     return saved ? JSON.parse(saved) : (view === "front" ? frontLabels : backLabels);
@@ -70,8 +72,14 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
     const savedEditMode = localStorage.getItem('muscle-map-edit-mode');
     return savedEditMode === 'true';
   });
-  const [labelSize, setLabelSize] = useState(14);
-  const [lineWidth, setLineWidth] = useState(40);
+  const [labelSize, setLabelSize] = useState(() => {
+    const saved = localStorage.getItem(globalSettingsKey);
+    return saved ? JSON.parse(saved).labelSize || 14 : 14;
+  });
+  const [lineWidth, setLineWidth] = useState(() => {
+    const saved = localStorage.getItem(globalSettingsKey);
+    return saved ? JSON.parse(saved).lineWidth || 40 : 40;
+  });
   const [draggedLabel, setDraggedLabel] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showExercises, setShowExercises] = useState(false);
@@ -80,10 +88,27 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newLabelData, setNewLabelData] = useState({ name: "", muscle: "", side: "left" as "left" | "right" });
 
+  // Carregar labels quando mudar de view
   useEffect(() => {
     const saved = localStorage.getItem(storageKey);
     setLabels(saved ? JSON.parse(saved) : (view === "front" ? frontLabels : backLabels));
-  }, [view, storageKey]);
+    
+    // Carregar ajustes globais quando mudar de view
+    const savedGlobal = localStorage.getItem(globalSettingsKey);
+    if (savedGlobal) {
+      const parsed = JSON.parse(savedGlobal);
+      setLabelSize(parsed.labelSize || 14);
+      setLineWidth(parsed.lineWidth || 40);
+    } else {
+      setLabelSize(14);
+      setLineWidth(40);
+    }
+  }, [view, storageKey, globalSettingsKey]);
+
+  // Salvar ajustes globais automaticamente quando mudam
+  useEffect(() => {
+    localStorage.setItem(globalSettingsKey, JSON.stringify({ labelSize, lineWidth }));
+  }, [labelSize, lineWidth, globalSettingsKey]);
 
   const toggleEditMode = () => {
     const newEditMode = !isEditing;
@@ -105,7 +130,11 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
     const defaultLabels = view === "front" ? frontLabels : backLabels;
     setLabels(defaultLabels);
     localStorage.removeItem(storageKey);
-    toast.success("Posições resetadas!");
+    // Resetar ajustes globais também
+    setLabelSize(14);
+    setLineWidth(40);
+    localStorage.removeItem(globalSettingsKey);
+    toast.success("Posições e ajustes resetados!");
   };
 
   const handleFlipSide = (muscle: string) => {

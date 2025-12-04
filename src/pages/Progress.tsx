@@ -307,9 +307,9 @@ const Progress = () => {
     <Layout>
       <Tabs defaultValue="overview" className="w-full">
         {/* === MODIFICAÇÃO: Removida aba "Perfil" - acesso apenas pelo menu inferior === */}
-        <TabsList className="w-full grid grid-cols-2 mb-6">
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="body">Métricas Corporais</TabsTrigger>
+        <TabsList className="w-full grid grid-cols-2 mb-6 h-auto">
+          <TabsTrigger value="overview" className="py-3 text-sm sm:text-base">Visão Geral</TabsTrigger>
+          <TabsTrigger value="body" className="py-3 text-sm sm:text-base">Métricas Corporais</TabsTrigger>
         </TabsList>
 
         <TabsContent value="body" className="space-y-6 pb-20">
@@ -320,22 +320,22 @@ const Progress = () => {
 
         <TabsContent value="overview" className="space-y-6 pb-20">
           {/* Cabeçalho */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">Progresso</h1>
-              <p className="text-muted-foreground">Acompanhe sua evolução</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Progresso</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">Acompanhe sua evolução</p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => navigate("/workout-time")}>
-                <Clock className="w-4 h-4 mr-2" />
+            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide justify-center sm:justify-end">
+              <Button variant="outline" size="sm" className="flex-shrink-0 text-xs sm:text-sm" onClick={() => navigate("/workout-time")}>
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Tempo
               </Button>
-              <Button variant="outline" onClick={() => navigate("/calories-burned")}>
-                <Flame className="w-4 h-4 mr-2" />
+              <Button variant="outline" size="sm" className="flex-shrink-0 text-xs sm:text-sm" onClick={() => navigate("/calories-burned")}>
+                <Flame className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Calorias
               </Button>
-              <Button variant="outline" onClick={() => navigate("/protein-goal")}>
-                <Dumbbell className="w-4 h-4 mr-2" />
+              <Button variant="outline" size="sm" className="flex-shrink-0 text-xs sm:text-sm" onClick={() => navigate("/protein-goal")}>
+                <Dumbbell className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Proteína
               </Button>
             </div>

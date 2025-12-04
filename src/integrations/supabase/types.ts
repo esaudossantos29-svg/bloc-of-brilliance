@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      body_photos: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          photo_date: string | null
+          photo_type: string
+          photo_url: string
+          user_id: string
+          weight_at_photo: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          photo_date?: string | null
+          photo_type: string
+          photo_url: string
+          user_id: string
+          weight_at_photo?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          photo_date?: string | null
+          photo_type?: string
+          photo_url?: string
+          user_id?: string
+          weight_at_photo?: number | null
+        }
+        Relationships: []
+      }
       calories_burned: {
         Row: {
           activity_type: string | null

@@ -153,13 +153,18 @@ export const BodyMetricsView = () => {
                   className="w-auto h-full object-contain opacity-80"
                 />
               </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="absolute bottom-2 right-2 h-8 w-8 bg-background/80"
-              >
-                <Image className="h-4 w-4 text-primary" />
-              </Button>
+              <AddBodyPhotoDialog
+                onUpload={uploadPhoto}
+                trigger={
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="absolute bottom-2 right-2 h-8 w-8 bg-background/80"
+                  >
+                    <Image className="h-4 w-4 text-primary" />
+                  </Button>
+                }
+              />
             </div>
 
             {/* Peso e Data */}

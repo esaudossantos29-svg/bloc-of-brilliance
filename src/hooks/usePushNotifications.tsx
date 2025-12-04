@@ -74,6 +74,9 @@ export function usePushNotifications() {
     }
   };
 
+  // VAPID public key from environment
+  const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+
   const urlBase64ToUint8Array = (base64String: string) => {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
@@ -122,11 +125,14 @@ export function usePushNotifications() {
         await navigator.serviceWorker.ready;
       }
 
-      // VAPID public key (você deve gerar suas próprias chaves VAPID)
-      // Para gerar: npx web-push generate-vapid-keys
-      const vapidPublicKey = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
+      // Use VAPID public key from environment
+      if (!VAPID_PUBLIC_KEY) {
+        toast.error('VAPID_PUBLIC_KEY não configurada');
+        setLoading(false);
+        return false;
+      }
       
-      const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+      const convertedVapidKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
 
       // Criar subscrição push
       const subscription = await registration.pushManager.subscribe({

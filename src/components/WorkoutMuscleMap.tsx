@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, Save, Edit2, ArrowLeftRight, Plus, Minus, X, PlusCircle, GitBranch, Type, Slash } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -60,26 +60,38 @@ const backLabels: MuscleLabel[] = [
 export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: WorkoutMuscleMapProps) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  // Chaves separadas para mobile e desktop
-  const storageKey = `muscle-labels-${view}-${isMobile ? 'mobile' : 'desktop'}`;
-  const globalSettingsKey = `muscle-map-global-settings-${view}-${isMobile ? 'mobile' : 'desktop'}`;
   
-  const [labels, setLabels] = useState<MuscleLabel[]>(() => {
-    const saved = localStorage.getItem(storageKey);
-    return saved ? JSON.parse(saved) : (view === "front" ? frontLabels : backLabels);
-  });
+  // Estado para saber se o dispositivo foi determinado (isMobile não é mais undefined)
+  const [isDeviceReady, setIsDeviceReady] = useState(false);
+  
+  // Aguardar até que isMobile seja determinado (não undefined)
+  useEffect(() => {
+    if (isMobile !== undefined) {
+      setIsDeviceReady(true);
+    }
+  }, [isMobile]);
+  
+  // Chaves estabilizadas com useMemo - só mudam quando view ou isMobile mudam
+  const storageKey = useMemo(() => 
+    `muscle-labels-${view}-${isMobile ? 'mobile' : 'desktop'}`,
+    [view, isMobile]
+  );
+  
+  const globalSettingsKey = useMemo(() => 
+    `muscle-map-global-settings-${view}-${isMobile ? 'mobile' : 'desktop'}`,
+    [view, isMobile]
+  );
+  
+  // Iniciar com labels padrão - serão substituídos quando carregar do localStorage
+  const [labels, setLabels] = useState<MuscleLabel[]>(view === "front" ? frontLabels : backLabels);
+  const [labelsLoaded, setLabelsLoaded] = useState(false);
+  
   const [isEditing, setIsEditing] = useState(() => {
     const savedEditMode = localStorage.getItem('muscle-map-edit-mode');
     return savedEditMode === 'true';
   });
-  const [labelSize, setLabelSize] = useState(() => {
-    const saved = localStorage.getItem(globalSettingsKey);
-    return saved ? JSON.parse(saved).labelSize || 14 : 14;
-  });
-  const [lineWidth, setLineWidth] = useState(() => {
-    const saved = localStorage.getItem(globalSettingsKey);
-    return saved ? JSON.parse(saved).lineWidth || 40 : 40;
-  });
+  const [labelSize, setLabelSize] = useState(14);
+  const [lineWidth, setLineWidth] = useState(40);
   const [draggedLabel, setDraggedLabel] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showExercises, setShowExercises] = useState(false);
@@ -88,36 +100,53 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newLabelData, setNewLabelData] = useState({ name: "", muscle: "", side: "left" as "left" | "right" });
 
-  // Carregar labels quando mudar de view
+  // Carregar labels APENAS quando o dispositivo estiver determinado
   useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    setLabels(saved ? JSON.parse(saved) : (view === "front" ? frontLabels : backLabels));
+    if (!isDeviceReady) return;
     
-    // Carregar ajustes globais quando mudar de view
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        setLabels(JSON.parse(saved));
+      } catch {
+        setLabels(view === "front" ? frontLabels : backLabels);
+      }
+    } else {
+      setLabels(view === "front" ? frontLabels : backLabels);
+    }
+    
+    // Carregar ajustes globais
     const savedGlobal = localStorage.getItem(globalSettingsKey);
     if (savedGlobal) {
-      const parsed = JSON.parse(savedGlobal);
-      setLabelSize(parsed.labelSize || 14);
-      setLineWidth(parsed.lineWidth || 40);
-    } else {
-      setLabelSize(14);
-      setLineWidth(40);
+      try {
+        const parsed = JSON.parse(savedGlobal);
+        setLabelSize(parsed.labelSize || 14);
+        setLineWidth(parsed.lineWidth || 40);
+      } catch {
+        setLabelSize(14);
+        setLineWidth(40);
+      }
     }
-  }, [view, storageKey, globalSettingsKey]);
+    
+    setLabelsLoaded(true);
+  }, [isDeviceReady, storageKey, globalSettingsKey, view]);
 
   // Salvar ajustes globais automaticamente quando mudam
   useEffect(() => {
+    if (!isDeviceReady) return;
     localStorage.setItem(globalSettingsKey, JSON.stringify({ labelSize, lineWidth }));
-  }, [labelSize, lineWidth, globalSettingsKey]);
+  }, [labelSize, lineWidth, globalSettingsKey, isDeviceReady]);
 
-  // Auto-save labels com debounce quando mudam (posições, configurações individuais, etc.)
+  // Auto-save labels com debounce - APENAS quando dispositivo estiver pronto E labels carregados
   useEffect(() => {
+    if (!isDeviceReady || !labelsLoaded) return;
+    
     const timeoutId = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify(labels));
-    }, 300); // 300ms debounce para não salvar a cada pixel durante drag
+    }, 300);
     
     return () => clearTimeout(timeoutId);
-  }, [labels, storageKey]);
+  }, [labels, storageKey, isDeviceReady, labelsLoaded]);
 
   const toggleEditMode = () => {
     const newEditMode = !isEditing;
@@ -316,6 +345,15 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
     setEditingLabel(null);
     toast.success("Label removido! Não esqueça de salvar as posições.");
   };
+
+  // Mostrar loading enquanto determina o dispositivo
+  if (!isDeviceReady) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full flex flex-col items-center justify-center py-0 gap-2">

@@ -596,6 +596,39 @@ export type Database = {
         }
         Relationships: []
       }
+      muscle_map_settings: {
+        Row: {
+          created_at: string
+          device_type: string
+          global_settings: Json
+          id: string
+          labels: Json
+          updated_at: string
+          user_id: string
+          view: string
+        }
+        Insert: {
+          created_at?: string
+          device_type: string
+          global_settings?: Json
+          id?: string
+          labels?: Json
+          updated_at?: string
+          user_id: string
+          view: string
+        }
+        Update: {
+          created_at?: string
+          device_type?: string
+          global_settings?: Json
+          id?: string
+          labels?: Json
+          updated_at?: string
+          user_id?: string
+          view?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           created_at: string

@@ -61,26 +61,19 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
-  // Estado para saber se o dispositivo foi determinado (isMobile não é mais undefined)
-  const [isDeviceReady, setIsDeviceReady] = useState(false);
+  // Determinar se o dispositivo está pronto (isMobile não é mais undefined)
+  const isDeviceReady = isMobile !== undefined;
   
-  // Aguardar até que isMobile seja determinado (não undefined)
-  useEffect(() => {
-    if (isMobile !== undefined) {
-      setIsDeviceReady(true);
-    }
-  }, [isMobile]);
+  // Chaves estabilizadas com useMemo - retornam null até o dispositivo estar pronto
+  const storageKey = useMemo(() => {
+    if (!isDeviceReady) return null;
+    return `muscle-labels-${view}-${isMobile ? 'mobile' : 'desktop'}`;
+  }, [view, isMobile, isDeviceReady]);
   
-  // Chaves estabilizadas com useMemo - só mudam quando view ou isMobile mudam
-  const storageKey = useMemo(() => 
-    `muscle-labels-${view}-${isMobile ? 'mobile' : 'desktop'}`,
-    [view, isMobile]
-  );
-  
-  const globalSettingsKey = useMemo(() => 
-    `muscle-map-global-settings-${view}-${isMobile ? 'mobile' : 'desktop'}`,
-    [view, isMobile]
-  );
+  const globalSettingsKey = useMemo(() => {
+    if (!isDeviceReady) return null;
+    return `muscle-map-global-settings-${view}-${isMobile ? 'mobile' : 'desktop'}`;
+  }, [view, isMobile, isDeviceReady]);
   
   // Iniciar com labels padrão - serão substituídos quando carregar do localStorage
   const [labels, setLabels] = useState<MuscleLabel[]>(view === "front" ? frontLabels : backLabels);
@@ -100,9 +93,9 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newLabelData, setNewLabelData] = useState({ name: "", muscle: "", side: "left" as "left" | "right" });
 
-  // Carregar labels APENAS quando o dispositivo estiver determinado
+  // Carregar labels APENAS quando storageKey estiver definido
   useEffect(() => {
-    if (!isDeviceReady) return;
+    if (!storageKey || !globalSettingsKey) return;
     
     const saved = localStorage.getItem(storageKey);
     if (saved) {
@@ -129,24 +122,24 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
     }
     
     setLabelsLoaded(true);
-  }, [isDeviceReady, storageKey, globalSettingsKey, view]);
+  }, [storageKey, globalSettingsKey, view]);
 
   // Salvar ajustes globais automaticamente quando mudam
   useEffect(() => {
-    if (!isDeviceReady) return;
+    if (!globalSettingsKey) return;
     localStorage.setItem(globalSettingsKey, JSON.stringify({ labelSize, lineWidth }));
-  }, [labelSize, lineWidth, globalSettingsKey, isDeviceReady]);
+  }, [labelSize, lineWidth, globalSettingsKey]);
 
-  // Auto-save labels com debounce - APENAS quando dispositivo estiver pronto E labels carregados
+  // Auto-save labels com debounce - APENAS quando storageKey válido E labels carregados
   useEffect(() => {
-    if (!isDeviceReady || !labelsLoaded) return;
+    if (!storageKey || !labelsLoaded) return;
     
     const timeoutId = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify(labels));
     }, 300);
     
     return () => clearTimeout(timeoutId);
-  }, [labels, storageKey, isDeviceReady, labelsLoaded]);
+  }, [labels, storageKey, labelsLoaded]);
 
   const toggleEditMode = () => {
     const newEditMode = !isEditing;
@@ -160,6 +153,7 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
   };
 
   const handleSavePositions = () => {
+    if (!storageKey) return;
     localStorage.setItem(storageKey, JSON.stringify(labels));
     toast.success("Posições salvas! (O salvamento é automático)");
   };
@@ -167,11 +161,11 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
   const handleResetPositions = () => {
     const defaultLabels = view === "front" ? frontLabels : backLabels;
     setLabels(defaultLabels);
-    localStorage.removeItem(storageKey);
+    if (storageKey) localStorage.removeItem(storageKey);
     // Resetar ajustes globais também
     setLabelSize(14);
     setLineWidth(40);
-    localStorage.removeItem(globalSettingsKey);
+    if (globalSettingsKey) localStorage.removeItem(globalSettingsKey);
     toast.success("Posições e ajustes resetados!");
   };
 
@@ -257,7 +251,7 @@ export function WorkoutMuscleMap({ view, selectedMuscle, onMuscleSelect }: Worko
   };
 
   const handleDragEnd = () => {
-    if (draggedLabel) {
+    if (draggedLabel && storageKey) {
       // Salvar imediatamente quando termina o drag
       localStorage.setItem(storageKey, JSON.stringify(labels));
     }

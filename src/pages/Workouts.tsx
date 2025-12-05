@@ -20,6 +20,7 @@ import { BulkGifUploader } from "@/components/BulkGifUploader";
 import { WorkoutRecommendations } from "@/components/WorkoutRecommendations";
 import { useNavigate } from "react-router-dom";
 import { PopulateWorkouts } from "@/components/PopulateWorkouts";
+import { useRecentMuscleTraining } from "@/hooks/useRecentMuscleTraining";
 
 // Import muscle group icons
 import chestIcon from "@/assets/muscle-icons/chest-icon.png";
@@ -71,6 +72,9 @@ export default function Workouts() {
   const [exerciseSearchTerm, setExerciseSearchTerm] = useState('');
   const [exerciseCounts, setExerciseCounts] = useState<Record<string, number>>({});
   const [supabaseExercises, setSupabaseExercises] = useState<any[]>([]);
+  
+  // Hook para rastrear músculos treinados recentemente
+  const { getTrainingStatus, getProgressLevel } = useRecentMuscleTraining(7);
 
   useEffect(() => {
     loadWorkouts();
@@ -537,22 +541,27 @@ export default function Workouts() {
             
             {/* Grid de Grupos Musculares - NOVO DESIGN */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
-              {muscleGroups.map(group => (
-                <MuscleGroupCard
-                  key={group.id}
-                  id={group.id}
-                  name={group.name}
-                  icon={group.icon}
-                  color={group.color}
-                  isSelected={selectedGroup === group.id}
-                  exerciseCount={exerciseCounts[group.id] || 0}
-                  onClick={() => {
-                    setSelectedGroup(group.id);
-                    setSelectedGroupDetail(group);
-                    loadExercisesForGroup(group.id);
-                  }}
-                />
-              ))}
+              {muscleGroups.map(group => {
+                const trainingStatus = getTrainingStatus(group.id);
+                return (
+                  <MuscleGroupCard
+                    key={group.id}
+                    id={group.id}
+                    name={group.name}
+                    icon={group.icon}
+                    color={group.color}
+                    isSelected={selectedGroup === group.id}
+                    exerciseCount={exerciseCounts[group.id] || 0}
+                    progressLevel={getProgressLevel(group.id)}
+                    daysSinceTraining={trainingStatus?.daysSinceTraining}
+                    onClick={() => {
+                      setSelectedGroup(group.id);
+                      setSelectedGroupDetail(group);
+                      loadExercisesForGroup(group.id);
+                    }}
+                  />
+                );
+              })}
             </div>
 
             {/* Mapeamento Muscular Interativo */}

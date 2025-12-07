@@ -6,6 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Secret for cron job authentication
+const CRON_SECRET = Deno.env.get('CRON_SECRET');
+
 // Mensagens motivacionais
 const motivationalMessages = [
   "Bom dia! Lembre-se: cada treino te aproxima do seu objetivo! 💪",
@@ -21,6 +24,22 @@ const motivationalMessages = [
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Validate cron secret for scheduled invocations
+  const authHeader = req.headers.get('authorization');
+  const cronSecretHeader = req.headers.get('x-cron-secret');
+  
+  // Allow if valid cron secret is provided OR if coming from Supabase cron (has service role)
+  const isValidCronRequest = cronSecretHeader === CRON_SECRET && CRON_SECRET;
+  const isSupabaseCron = authHeader?.includes('service_role');
+  
+  if (!isValidCronRequest && !isSupabaseCron) {
+    console.error('❌ Unauthorized: Invalid or missing cron secret');
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+    );
   }
 
   try {

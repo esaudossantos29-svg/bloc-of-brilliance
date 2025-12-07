@@ -1,7 +1,7 @@
 project_id = "mpcnsxyqpfaorlxingur"
 
 [functions.analyze-food]
-verify_jwt = false
+verify_jwt = true
 
 [functions.analyze-exercise-gif]
 verify_jwt = true
@@ -10,7 +10,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.populate-subdivisions]
-verify_jwt = false
+verify_jwt = true
 
 [functions.sync-exercise-gifs]
 verify_jwt = true
@@ -19,7 +19,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.clear-exercise-gifs]
-verify_jwt = false
+verify_jwt = true
 
 [functions.scheduled-reminders]
 verify_jwt = false

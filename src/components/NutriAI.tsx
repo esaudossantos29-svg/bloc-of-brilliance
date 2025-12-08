@@ -81,8 +81,18 @@ const NutriAI = () => {
       <div className="relative">
         <motion.div
           className="relative cursor-pointer"
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
+          initial={{ scale: 1 }}
+          animate={{ 
+            scale: isActive ? 1.4 : 1,
+            y: isActive ? -20 : 0
+          }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 300, 
+            damping: 20 
+          }}
+          whileHover={{ scale: isActive ? 1.45 : 1.05 }}
+          whileTap={{ scale: isActive ? 1.35 : 0.95 }}
           onClick={handleCharacterClick}
         >
           <NutriCharacter

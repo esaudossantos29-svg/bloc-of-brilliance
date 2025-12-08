@@ -65,7 +65,12 @@ export default {
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
+        inter: ["Inter", "system-ui", "sans-serif"],
         notes: ["Merriweather", "Georgia", "serif"],
+      },
+      letterSpacing: {
+        tight: "-0.025em",
+        tighter: "-0.05em",
       },
       backgroundImage: {
         "gradient-fitness": "var(--gradient-fitness)",
@@ -100,10 +105,30 @@ export default {
             height: "0",
           },
         },
+        ripple: {
+          "0%": {
+            transform: "scale(0)",
+            opacity: "0.6",
+          },
+          "100%": {
+            transform: "scale(4)",
+            opacity: "0",
+          },
+        },
+        shimmer: {
+          "0%": {
+            backgroundPosition: "-200% 0",
+          },
+          "100%": {
+            backgroundPosition: "200% 0",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        ripple: "ripple 0.6s ease-out forwards",
+        shimmer: "shimmer 2s linear infinite",
       },
     },
   },

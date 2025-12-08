@@ -311,13 +311,18 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
         <Card className="p-6">
           <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
             <LayoutGrid className="w-5 h-5 text-primary" />
             Ações Rápidas
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Link to="/admin/users">
+              <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2">
+                <Users className="w-6 h-6" />
+                <span>Gerenciar Usuários</span>
+              </Button>
+            </Link>
             <Link to="/exercise-management">
               <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2">
                 <Database className="w-6 h-6" />

@@ -35,6 +35,7 @@ import CustomWorkouts from "./pages/CustomWorkouts";
 import CustomFoods from "./pages/CustomFoods";
 import Diet21Days from "./pages/Diet21Days";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +78,7 @@ const AppContent = () => {
         <Route path="/custom-foods" element={<ProtectedRoute><CustomFoods /></ProtectedRoute>} />
         <Route path="/diet-21-days" element={<ProtectedRoute><Diet21Days /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

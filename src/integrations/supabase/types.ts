@@ -711,8 +711,11 @@ export type Database = {
           height: number | null
           id: string
           is_premium: boolean | null
+          is_suspended: boolean | null
           name: string | null
           onboarding_completed: boolean | null
+          suspended_at: string | null
+          suspended_reason: string | null
           trial_expired: boolean | null
           trial_started_at: string | null
           updated_at: string
@@ -734,8 +737,11 @@ export type Database = {
           height?: number | null
           id?: string
           is_premium?: boolean | null
+          is_suspended?: boolean | null
           name?: string | null
           onboarding_completed?: boolean | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
           trial_expired?: boolean | null
           trial_started_at?: string | null
           updated_at?: string
@@ -757,8 +763,11 @@ export type Database = {
           height?: number | null
           id?: string
           is_premium?: boolean | null
+          is_suspended?: boolean | null
           name?: string | null
           onboarding_completed?: boolean | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
           trial_expired?: boolean | null
           trial_started_at?: string | null
           updated_at?: string

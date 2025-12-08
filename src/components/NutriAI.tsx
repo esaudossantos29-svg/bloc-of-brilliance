@@ -77,7 +77,7 @@ const NutriAI = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-3 z-50">
+    <div className="fixed bottom-20 right-4 z-50">
       <div className="relative">
         <motion.div
           className="relative cursor-pointer"

@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
-import { useAdminUsers } from '@/hooks/useAdminUsers';
+import { useAdminUsers, usePromoteAdminByEmail } from '@/hooks/useAdminUsers';
 import { UserManagementTable } from '@/components/admin/UserManagementTable';
 import { toast } from 'sonner';
 import { 
@@ -16,13 +17,27 @@ import {
   RefreshCw,
   Crown,
   Ban,
-  Activity
+  Activity,
+  UserPlus,
+  Loader2
 } from 'lucide-react';
 
 const AdminUsers: React.FC = () => {
   const navigate = useNavigate();
   const { isAdmin, loading: adminLoading } = useIsAdmin();
   const { data: users, isLoading: usersLoading, refetch } = useAdminUsers();
+  const promoteAdmin = usePromoteAdminByEmail();
+  const [newAdminEmail, setNewAdminEmail] = useState('');
+
+  const handlePromoteAdmin = async () => {
+    if (!newAdminEmail.trim()) {
+      toast.error('Digite o email do usuário');
+      return;
+    }
+    
+    await promoteAdmin.mutateAsync(newAdminEmail.trim());
+    setNewAdminEmail('');
+  };
 
   useEffect(() => {
     if (!adminLoading && !isAdmin) {
@@ -118,6 +133,36 @@ const AdminUsers: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        {/* Add Admin by Email */}
+        <Card className="p-4 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <UserPlus className="w-5 h-5 text-primary" />
+            <h2 className="font-semibold">Adicionar Novo Admin</h2>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              type="email"
+              placeholder="Email do usuário..."
+              value={newAdminEmail}
+              onChange={(e) => setNewAdminEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handlePromoteAdmin()}
+              className="flex-1"
+            />
+            <Button 
+              onClick={handlePromoteAdmin}
+              disabled={promoteAdmin.isPending || !newAdminEmail.trim()}
+              className="flex items-center gap-2"
+            >
+              {promoteAdmin.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Shield className="w-4 h-4" />
+              )}
+              Tornar Admin
+            </Button>
+          </div>
+        </Card>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

@@ -15,6 +15,11 @@ import workoutFreeweights from "@/assets/workout-freeweights.jpg";
 import workoutBack from "@/assets/workout-back.jpg";
 import workoutLegsFemale from "@/assets/workout-legs-female.jpg";
 import workoutCardio from "@/assets/workout-cardio.jpg";
+import workoutChest from "@/assets/workout-chest.jpg";
+import workoutShoulders from "@/assets/workout-shoulders.jpg";
+import workoutBiceps from "@/assets/workout-biceps.jpg";
+import workoutTriceps from "@/assets/workout-triceps.jpg";
+import workoutHiit from "@/assets/workout-hiit.jpg";
 
 interface RippleProps {
   x: number;
@@ -113,35 +118,44 @@ export function WorkoutCard({
   const getCategoryImage = (cat: string, workoutName: string) => {
     const nameLower = workoutName.toLowerCase();
     
-    // Primeiro, verificar por palavras-chave no nome do treino
+    // Primeiro, verificar por palavras-chave específicas no nome do treino
+    if (nameLower.includes('peitoral') || nameLower.includes('peito') || nameLower.includes('chest') || nameLower.includes('supino')) {
+      return workoutChest;
+    }
+    if (nameLower.includes('ombro') || nameLower.includes('deltóide') || nameLower.includes('deltoide') || nameLower.includes('shoulder')) {
+      return workoutShoulders;
+    }
+    if (nameLower.includes('bíceps') || nameLower.includes('biceps') || nameLower.includes('bicep')) {
+      return workoutBiceps;
+    }
+    if (nameLower.includes('tríceps') || nameLower.includes('triceps') || nameLower.includes('tricep')) {
+      return workoutTriceps;
+    }
+    if (nameLower.includes('hiit') || nameLower.includes('alta intensidade') || nameLower.includes('high intensity')) {
+      return workoutHiit;
+    }
     if (nameLower.includes('full body') || nameLower.includes('corpo todo') || nameLower.includes('total body')) {
       return workoutFreeweights;
     }
     if (nameLower.includes('força') || nameLower.includes('forca') || nameLower.includes('strength')) {
       return workoutChestLegs;
     }
-    if (nameLower.includes('peitoral') || nameLower.includes('peito') || nameLower.includes('chest')) {
-      return workoutChestLegs;
-    }
-    if (nameLower.includes('costas') || nameLower.includes('dorsal')) {
+    if (nameLower.includes('costas') || nameLower.includes('dorsal') || nameLower.includes('back')) {
       return workoutBack;
     }
     if (nameLower.includes('abdômen') || nameLower.includes('abdomen') || nameLower.includes('core') || nameLower.includes('abs')) {
       return workoutAbsDefined;
     }
-    if (nameLower.includes('glúteos') || nameLower.includes('gluteos') || nameLower.includes('bumbum')) {
+    if (nameLower.includes('glúteos') || nameLower.includes('gluteos') || nameLower.includes('bumbum') || nameLower.includes('glutes')) {
       return workoutLegsGlutes;
     }
-    if (nameLower.includes('bíceps') || nameLower.includes('biceps') || nameLower.includes('tríceps') || nameLower.includes('triceps') || nameLower.includes('braço') || nameLower.includes('braco')) {
+    if (nameLower.includes('braço') || nameLower.includes('braco') || nameLower.includes('arms')) {
       return workoutArmsAbs;
     }
-    if (nameLower.includes('pernas') || nameLower.includes('quadríceps') || nameLower.includes('quadriceps') || nameLower.includes('panturrilha')) {
+    if (nameLower.includes('pernas') || nameLower.includes('quadríceps') || nameLower.includes('quadriceps') || nameLower.includes('panturrilha') || nameLower.includes('legs')) {
       return workoutLegsFemale;
     }
-    if (nameLower.includes('ombro') || nameLower.includes('deltóide') || nameLower.includes('deltoide')) {
-      return workoutFreeweights;
-    }
-    if (nameLower.includes('cardio') || nameLower.includes('hiit') || nameLower.includes('aeróbico') || nameLower.includes('aerobico')) {
+    if (nameLower.includes('cardio') || nameLower.includes('aeróbico') || nameLower.includes('aerobico') || nameLower.includes('corrida')) {
       return workoutCardio;
     }
     
@@ -151,13 +165,16 @@ export function WorkoutCard({
       "7min": workoutCardio,
       full_body: workoutFreeweights,
       abs: workoutAbsDefined,
-      hiit: workoutCardio,
+      hiit: workoutHiit,
       strength: workoutChestLegs,
       legs: workoutLegsGlutes,
       back: workoutBack,
       cardio: workoutCardio,
-      chest: workoutChestLegs,
+      chest: workoutChest,
       arms: workoutArmsAbs,
+      shoulders: workoutShoulders,
+      biceps: workoutBiceps,
+      triceps: workoutTriceps,
     };
     return images[cat] || workoutFreeweights;
   };

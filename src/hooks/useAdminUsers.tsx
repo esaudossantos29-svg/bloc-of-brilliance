@@ -271,3 +271,37 @@ export function useToggleAdminRole() {
     },
   });
 }
+
+export function usePromoteAdminByEmail() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (email: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Não autenticado');
+      }
+
+      const response = await supabase.functions.invoke('promote-admin-by-email', {
+        body: { email },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Erro ao promover admin');
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success(data?.message || 'Usuário promovido a Admin');
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Erro ao promover admin');
+    },
+  });
+}
